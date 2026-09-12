@@ -34,34 +34,81 @@
 되는 입력에서도 「후보 0건」이 똑같이 출력된다 — 그 0 은 **「튐 없음」이 아니라 「비교 안 함」**
 이다(이 저장소가 이름 붙인 「레인이 초록인 이유는 셋」의 ②). ⇒ `scan()` 은 **비교된 도형-쌍
 수**를 항상 같이 낸다 — 0 이면 UNMEASURED 로 읽어야 한다는 뜻이다.
+
+## 🟥 이름만으로는 «같은 도형»이 아니다 — 다만 **버리는 게 아니라 신뢰도를 갈라야 한다**
+
+위 절이 «대조 못 한 것»(0건)을 걱정했다면 이 절은 그 반대 — **틀린 것끼리 대조한 것**이다.
+서로 다른 도해가 `a-b1` · `TextBox 208xx` 같은 **범용 이름을 재사용**하므로, 이름이 같다고
+같은 도형이 아니다. 실측(120장 한국어 덱, 2026-09-10): 이름이 맞은 **824 쌍** 중
+
+    이름+글자 일치  425 (52%)   ← 같은 도형이라 말할 근거가 둘
+    이름만 같음      65 ( 8%)   ← 다른 내용이 같은 이름을 입었다. **대조 자체가 틀렸다** → 제외
+    양쪽 글자 없음  334 (40%)   ← 막대·선·아이콘. 결박할 근거가 **이름뿐**이다
+
+🟥 **그래서 처방이 「이름 AND 글자로 좁힌다」가 아니다 — 그건 한 번 틀렸다.** 2026-09-10 에
+그렇게 좁혀 놓고 원적 사건 재현 프로브를 돌렸더니 **P1 이 존재하는 이유였던 그 결함이
+사라졌다**: 35p→36p 의 게이트 막대 `s5017`(x −35,000 EMU, 회색 연결선과 겹침)은 **글자가 없는
+도형**이라 좁힌 결박이 통째로 잘라냈다. 오탐을 없애면서 자기 known-positive 를 같이 죽인 것이다
+([[feedback_deletion_beats_repair_dead_filter]] 의 반대 방향 — 이번엔 필터가 진짜를 죽였다).
+
+⇒ **셋을 신뢰도로 가른다. 버리는 것은 하나뿐이다.**
+
+    bound      이름+글자 일치 → 후보로 낸다 (근거 둘)
+    name_only  양쪽 글자 없음 → **후보로 내되 «이름만»이라고 이름표를 붙인다** (근거 하나)
+    mismatch   글자가 다름     → 제외. 이것만이 실제로 틀린 결박이다
+
+`compared=824` 라는 한 숫자를 안 쓰는 이유가 이것이다 — 그 숫자는 「824 쌍을 봤다」로 읽히지만
+셋의 성격이 전부 다르다. 🟥 **`bound` 든 `name_only` 든 0 이면 「튐 없음」이 아니라 UNMEASURED 다.**
+
+## 🟥 그리고 이 레인은 «의도된 연출»과 «사고»를 못 가른다 — 판단은 사람이 선언한다
+
+실사고(2026-09-10): 49p→50p 에서 격리 막대가 10.24pt 두꺼워지는 것은 「격리가 세지는」
+**연출**이었는데 이 레인이 튐으로 냈고, 그것을 «고쳤다가» 운영자 지적으로 되돌렸다.
+🟥 **휴리스틱으로 못 가른다** — 임계의 전제가 「큰 변화는 의도다」인데 그 연출은 임계(15.7pt)
+바로 아래에 있었다. ⇒ 기계는 «선언되었나»만 보고 «옳은가»는 안 본다(CLAUDE.md
+§Mechanization Boundary — 채널은 굳히고 판단은 안 굳힌다).
+
+`surfaces.yaml` 의 `geometry.intended` 에 선언한다:
+
+    geometry:
+      intended:
+        - slides: [49, 50]
+          shapes: ["s7215", "s7217"]
+          attrs:  [x, cx]                 # 🟥 «바뀐 속성 집합»까지 정확히 일치해야 면제된다
+          why:    "격리 막대 얇음→두꺼움. 「격리가 세지는」 연출"
+
+🟥 **면제는 도형이 아니라 «그 변화»에 걸린다.** 이름만으로 면제하면 그 도형이 나중에 진짜로
+튈 때 조용히 삼킨다 — 이 저장소가 이름 붙인 「ACK 를 손실 내용에 결박하라」와 같은 자리다.
+선언한 것 말고 **다른 속성이 바뀌면 그대로 뜬다.** `why` 가 비면 면제가 아니라 **오류**다.
+🟥 그리고 면제된 것은 **«면제됨»으로 출력한다** — 조용히 사라지면 다음 감사자가 그 연출을
+다시 «발견»한다(§방법론 ⓕ 「알고도 남긴 것」).
 """
-import zipfile, re, os, collections
+import zipfile, re, os, collections, html
 
 EMU_PT = 12700
 
 
+import oox as _oox
+
+
 def shapes(z, sn):
-    """한 슬라이드의 도형을 {이름: (x,y,cx,cy,text)} 로. 이름 중복은 대조 못 하니 뺀다."""
-    x = z.read('ppt/slides/slide%d.xml' % sn).decode('utf-8')
+    """한 슬라이드의 도형을 {이름: (x,y,cx,cy,text,flip)} 로. 이름 중복은 대조 못 하니 뺀다.
+    🟥 2026-09-11: 정규식 독자를 oox(트리 독자)로 교체 — 그룹 변환(이동·flip)을 합성한 절대 좌표, 속성 순서·접두·엔티티 무관."""
     out = {}
-    for m in re.finditer(r'<p:(sp|cxnSp)>.*?</p:\1>', x, re.S):
-        b = m.group(0)
-        nm = re.search(r'name="([^"]*)"', b)
-        o = re.search(r'<a:off x="(-?\d+)" y="(-?\d+)"/><a:ext cx="(-?\d+)" cy="(-?\d+)"', b)
-        if not (nm and o):
+    walked = _oox.walk_slide(z, sn)
+    # R9 A9(codex): 이름 중복은 «장 위의 모든 도형» 에서 센다 — xfrm 없는 자리표시자와 겹치는 이름을 걸러낸 뒤 세면 결박이 그 이름을 «유일» 로 오인한다
+    dup = {n_ for n_, c_ in collections.Counter(s_['name'] for s_ in walked if s_['name'] is not None).items() if c_ > 1}
+    for s in walked:
+        if s['kind'] not in ('sp', 'cxnSp') or s['name'] is None or s['x'] is None or s['name'] in dup:
             continue
-        t = re.sub(r'\s+', ' ', ' '.join(re.findall(r'<a:t>([^<]*)</a:t>', b))).strip()
-        out.setdefault(nm.group(1), []).append(
-            (int(o.group(1)), int(o.group(2)), int(o.group(3)), int(o.group(4)), t))
+        # R8 B11(+R7 rot): 회전·배율 미정의 그룹 아래 도형은 좌표를 «값» 으로 쓰지 않는다 — 7번째 칸에 이름을 남긴다
+        unm = 'rot' if s.get('rot_unmeasured') else ('geo' if s.get('geo_unmeasured') else None)
+        out.setdefault(s['name'], []).append((s['x'], s['y'], s['cx'], s['cy'], _oox.shape_text(s['paras']), s['flip'], unm))
     return {k: v[0] for k, v in out.items() if len(v) == 1}
 
 
 def _order(z):
-    rels = dict(re.findall(r'Id="([^"]+)"[^>]*Target="slides/slide(\d+)\.xml"',
-                            z.read('ppt/_rels/presentation.xml.rels').decode('utf-8')))
-    lst = re.search(r'<p:sldIdLst>.*?</p:sldIdLst>',
-                     z.read('ppt/presentation.xml').decode('utf-8'), re.S).group(0)
-    return [int(rels[r]) for r in re.findall(r'<p:sldId id="\d+" r:id="([^"]+)"/>', lst)]
+    return _oox.slide_order(z)
 
 
 def load_slides(path):
@@ -69,31 +116,117 @@ def load_slides(path):
     return [shapes(z, sn) for sn in _order(z)]
 
 
-def p1_lines(S, JIT):
-    """build-jitter 후보. 반환: (lines, compared) — compared=0 이면 대조 대상이 아예 없었다는
-    뜻이라 «튐 0건»과 «UNMEASURED」를 갈라야 한다."""
-    lines, compared = [], 0
+LAB = ['x', 'y', 'cx', 'cy']
+DECLARABLE = LAB + ['flip']      # R8 A5: 뒤집힘도 선언으로 면제할 수 있어야 한다 — 채널 없는 후보는 영원한 후보다
+
+
+def _intent_index(intended):
+    """`geometry.intended` 선언을 조회용으로 편다.
+
+    반환: ({(prev_slide, shape_name): [(frozenset(attrs), why), …]}, errors)
+    🟥 `why` 가 비었거나 필드가 빠진 항목은 **면제하지 않고 오류로 낸다** — 사유 없는 면제는
+       이 채널이 존재하는 이유(누가·왜 남겼나)를 지운다."""
+    idx, errs = collections.defaultdict(list), []
+    for n, e in enumerate(intended or [], 1):
+        if not isinstance(e, dict):
+            errs.append(f'geometry.intended[{n}] : 매핑이 아니다 — 면제 안 함')
+            continue
+        sl, sh = e.get('slides') or [], e.get('shapes') or []
+        if not isinstance(sh, list) or not isinstance(sl, list) or not isinstance(e.get('attrs') or [], list):   # R8 B9: attrs 도
+            errs.append(f'geometry.intended[{n}] : shapes·slides 는 목록이어야 한다 (문자열 "ab" 는 a·b 두 도형으로 읽힌다) — 면제 안 함')   # R3 A9
+            continue
+        at, why = e.get('attrs') or [], (e.get('why') or '').strip()
+        if len(sl) != 2 or not sh or not at:
+            errs.append(f'geometry.intended[{n}] : slides(2개)·shapes·attrs 가 모두 있어야 한다 — 면제 안 함')
+            continue
+        # 🟥 면제는 «그 변화» 에 걸린다 — 변화는 i→i+1 사이에 있으므로 두 끝점이 모두 정수이고
+        #    연속이어야 한다. [1, 99] 나 [1, "garbage"] 가 1→2 의 변화를 면제하던 구멍(codex 09-11).
+        if not all(isinstance(v, int) and not isinstance(v, bool) for v in sl) or sl[1] != sl[0] + 1:
+            errs.append(f'geometry.intended[{n}] : slides 는 연속한 두 정수 [i, i+1] 이어야 한다 (받은 값 {sl!r}) — 면제 안 함')
+            continue
+        bad = [a for a in at if a not in DECLARABLE]
+        if bad:
+            errs.append(f'geometry.intended[{n}] : attrs 에 모르는 이름 {bad} (x·y·cx·cy·flip 뿐) — 면제 안 함')
+            continue
+        if not why:
+            errs.append(f'geometry.intended[{n}] : 🟥 why 가 비었다 — 사유 없는 면제는 오류다, 면제 안 함')
+            continue
+        for name in sh:
+            idx[(int(sl[0]), name)].append((frozenset(at), why, n))
+    return idx, errs
+
+
+def p1_lines(S, JIT, intended=None):
+    """build-jitter 후보.
+
+    반환: (lines, stats, suppressed, errors)
+      stats  = {'bound', 'name_only', 'mismatch'} — 🟥 셋을 한 숫자로 접지 않는다.
+               `bound`/`name_only` 가 둘 다 0 이면 «튐 없음»이 아니라 UNMEASURED 다.
+      lines  = 후보. `name_only` 결박은 줄 끝에 **[이름만]** 이 붙는다 — 성격이 다르니
+               같은 목록에 두되 같은 것처럼 읽히면 안 된다.
+      suppressed = `geometry.intended` 로 면제된 줄 (조용히 버리지 않고 같이 낸다)"""
+    idx, errors = _intent_index(intended)
+    declared = {n for v in idx.values() for _a, _w, n in v}
+    hits = collections.Counter()
+    lines, suppressed = [], []
+    stats = collections.Counter()
     for i in range(1, len(S)):
         for nm, cur in S[i].items():
             prv = S[i - 1].get(nm)
             if not prv:
                 continue
-            compared += 1
+            # 🟥 이름은 결박의 «필요조건»이다. 글자는 근거를 하나 더 얹을 뿐이고,
+            #    글자가 없다고 도형이 없는 게 아니다 — 잘라내면 원적 사건이 죽는다(위 절).
+            if cur[4] != prv[4]:
+                stats['mismatch'] += 1        # 다른 내용이 같은 이름을 입었다 → 결박 자체가 틀렸다
+                continue
+            if (len(cur) > 6 and cur[6]) or (len(prv) > 6 and prv[6]):
+                stats['unmeasured'] += 1      # R8 B11: 회전/배율 미정의 그룹 아래 — 좌표가 값이 아니다. 0 으로 접지 않는다
+                continue
+            weak = not cur[4]                 # 양쪽 다 글자 없음 → 근거가 이름 하나뿐
+            stats['name_only' if weak else 'bound'] += 1
+            # 🟥 뒤집힘은 «근사»가 아니다 — 임계와 무관하게 낸다. 상자가 한 EMU도 안 움직여도
+            #    화면에서는 화살표가 반대를 가리킨다.
+            flip_changed = cur[5] != prv[5]
             d = [cur[k] - prv[k] for k in range(4)]
             mx = max(abs(v) for v in d)
-            if 0 < mx <= JIT:
-                lab = ['x', 'y', 'cx', 'cy']
-                moved = ' · '.join(f'{lab[k]} {d[k]:+d}' for k in range(4) if d[k])
-                lines.append(f"   {i:>3}p→{i+1:<3}p {nm[:16]:16} {moved}  ({mx/EMU_PT:.2f}pt)  "
-                             f"«{cur[4][:26]}»")
-    return lines, compared
+            jitter = 0 < mx <= JIT
+            moved_set = frozenset(LAB[k] for k in range(4) if d[k]) if jitter else frozenset()
+            # R8 A5: 면제 조회 키 = «이 쌍에서 실제로 바뀐 것» — 뒤집힘 + 튐 속성. 선언은 그 집합과 정확히 같아야 한다
+            changed = moved_set | (frozenset(['flip']) if flip_changed else frozenset())
+            hit = next(((w, n) for a, w, n in idx.get((i, nm), []) if a == changed), None) if changed else None
+            if flip_changed:
+                fl = (f"   {i:>3}p→{i+1:<3}p {nm} 🟥 뒤집힘 "
+                      f"«{prv[5] or '없음'}» → «{cur[5] or '없음'}»  "
+                      f"— 자리는 그대로여도 방향이 바뀐다  "
+                      + ('[이름만 결박]' if weak else f'«{cur[4][:20]}»'))
+                stats['flipped'] += 1
+                (suppressed if hit is not None else lines).append(fl + (f"   ← 선언된 연출: {hit[0]}" if hit is not None else ''))
+            if not jitter:
+                if hit is not None:
+                    hits[hit[1]] += 1
+                continue
+            moved = ' · '.join(f'{LAB[k]} {d[k]:+d}' for k in range(4) if d[k])
+            line = (f"   {i:>3}p→{i+1:<3}p {nm} {moved}  ({mx/EMU_PT:.2f}pt)  "   # R3 A8: 줄이 곧 신원 — 이름을 자르면 델타가 두 도형을 합친다
+                    + ('[이름만 결박 — 글자 없는 도형]' if weak else f'«{cur[4][:26]}»'))
+            if hit is not None:
+                suppressed.append(line + f"   ← 선언된 연출: {hit[0]}")
+                hits[hit[1]] += 1
+            else:
+                lines.append(line)
+    # 🟥 아무것도 안 거는 선언은 «알고 남긴 것» 이 아니라 «알던 것이 틀린 것» 이다 — 출력이 같으면
+    #    구분이 안 된다(덱 세션 실측 09-11: 유령 후보에 why 를 붙여 선언해 둔 것이 수리 뒤 죽어 있었다).
+    for n in sorted(declared):
+        if hits.get(n, 0) == 0:
+            errors.append(f'geometry.intended[{n}] : 🟥 죽은 선언 — 이 덱에서 아무 변화도 면제하지 않는다(가리키는 변화가 없다). 지우거나 고쳐라')
+    return lines, dict(stats), suppressed, errors
 
 
 def p3_lines(S, ALN):
     """adjacency 후보 — A 오른쪽 끝 ↔ B 왼쪽 끝, 세로로 겹치는 띠에 있을 때만."""
     lines = []
     for i, sh in enumerate(S):
-        items = [(nm, v) for nm, v in sh.items() if v[2] > 0 and v[3] > 0]
+        items = [(nm, v) for nm, v in sh.items() if v[2] > 0 and v[3] > 0 and not (len(v) > 6 and v[6])]   # R8 B11
         for a in range(len(items)):
             for b in range(len(items)):
                 if a == b:
@@ -106,28 +239,42 @@ def p3_lines(S, ALN):
                 gap = vb[0] - (va[0] + va[2])  # A 오른쪽 → B 왼쪽
                 if 0 < abs(gap) <= ALN:
                     kind = '겹침' if gap < 0 else '틈'
-                    lines.append(f"   {i+1:>3}p {na[:14]:14} 오른끝 → {nb[:14]:14} 왼끝  "
+                    lines.append(f"   {i+1:>3}p {na} 오른끝 → {nb} 왼끝  "
                                  f"{kind} {abs(gap):>6} EMU ({abs(gap)/EMU_PT:.2f}pt)")
     return lines
 
 
-def collect_lines(path, JIT, ALN):
-    """(lines, compared) — P1+P3 합친 후보 줄과, P1 이 실제로 대조한 도형-쌍 수."""
+def collect_lines(path, JIT, ALN, intended=None):
+    """(lines, stats, suppressed, errors) — P1+P3 합친 후보 줄과 P1 의 결박 내역."""
     S = load_slides(path)
-    l1, compared = p1_lines(S, JIT)
+    l1, stats, suppressed, errors = p1_lines(S, JIT, intended)
     l3 = p3_lines(S, ALN)
-    return l1 + l3, compared
+    return l1 + l3, stats, suppressed, errors
 
 
-def delta(base_path, cur_path, JIT, ALN):
+def _fmt_stats(stats):
+    """🟥 세 숫자를 한 줄로 묶되 **합치지는 않는다** — 성격이 셋 다 다르다."""
+    b, w, m = (stats.get('bound', 0), stats.get('name_only', 0), stats.get('mismatch', 0))
+    s = f"이름+글자 {b}쌍 · 이름만(글자 없는 도형) {w}쌍 · 글자 불일치 {m}쌍 제외"
+    if stats.get('flipped'):
+        s += f" · 🟥 뒤집힘 {stats['flipped']}건"
+    if stats.get('unmeasured'):
+        s += f" · ⬜ 회전/배율 미정의 그룹 아래 {stats['unmeasured']}쌍 UNMEASURED"
+    if not (b or w):
+        s += ' — 🟥 결박 0 이면 「튐 없음」이 아니라 UNMEASURED 다'
+    return s
+
+
+def delta(base_path, cur_path, JIT, ALN, intended=None):
     """편집 전/후 델타 — 절대 목록이 아니라 **차이**로 읽는 용법(정확했던 것). P3 는 SYS 를 안 쓰니
     양쪽에 같은 규칙을 그대로 적용하면 된다(계기 자기결함이 P2 전용이라 여기 안 옮는다)."""
-    bl, cmp_b = collect_lines(base_path, JIT, ALN)
-    cur, cmp_c = collect_lines(cur_path, JIT, ALN)
+    bl, st_b, sup_b, _err_b = collect_lines(base_path, JIT, ALN, intended)
+    cur, st_c, sup_c, err_c = collect_lines(cur_path, JIT, ALN, intended)
     b = set(bl)
     new = [l for l in cur if l not in b]
     gone = [l for l in bl if l not in set(cur)]
-    return new, gone, cmp_b, cmp_c
+    # R2 A6: 선언 오류(죽은 선언 포함)는 «현재본» 의 것과 같이 나가야 한다 — 기준본 것을 내던 것은 다른 덱의 답
+    return new, gone, st_b, st_c, sup_c, err_c
 
 
 def _resolve(root, p):
@@ -147,35 +294,46 @@ def scan(cfg, root):
     JIT = int(spec.get('jitter_emu', 200000))
     ALN = int(spec.get('align_emu', 63500))
     base_p = spec.get('baseline')
+    intended = spec.get('intended') or []
     notes = []
+
+    def _tail(suppressed, errors):
+        """면제·선언 오류는 **항상 같이 낸다** — 조용히 사라진 면제가 §방법론 ⓕ 의 사고다."""
+        out = []
+        for e in errors:
+            out.append('   🟥 ' + e)
+        for l in suppressed:
+            out.append('   ~ (면제)' + l.strip())
+        if suppressed:
+            out.append(f'   ~ 선언된 연출 {len(suppressed)}건을 면제했다 — 「없다」가 아니라 「알고 남겼다」')
+        return out
 
     if base_p:
         base = _resolve(root, base_p)
         if not os.path.exists(base):
             return [], [f'P1/P3 geometry : baseline 실물 없음({base}) — UNMEASURED (0 아님)']
         try:
-            new, gone, cmp_b, cmp_c = delta(base, deck, JIT, ALN)
+            new, gone, st_b, st_c, sup, err = delta(base, deck, JIT, ALN, intended)
         except Exception as e:
             return [], [f'P1/P3 geometry : 계기 오류({type(e).__name__}: {e}) — UNMEASURED (0 아님)']
         notes.append(f'P1/P3 geometry(델타) : 기준 {os.path.basename(base)} 대비 '
-                     f'새 어긋남 {len(new)}건 · 사라진 어긋남 {len(gone)}건 🟥 advisory '
-                     f'(P1 대조된 도형-쌍: 기준 {cmp_b} · 현재 {cmp_c}'
-                     + ('' if cmp_b and cmp_c else ' — 🟥 0건이면 UNMEASURED, 「튐 없음」이 아니다') + ')')
+                     f'새 어긋남 {len(new)}건 · 사라진 어긋남 {len(gone)}건 🟥 advisory')
+        notes.append(f'   P1 결박(기준) : {_fmt_stats(st_b)}')
+        notes.append(f'   P1 결박(현재) : {_fmt_stats(st_c)}')
         for l in new:
             notes.append('   + ' + l.strip())
         for l in gone:
             notes.append('   - ' + l.strip())
-        return [], notes
+        return [], notes + _tail(sup, err)
 
     try:
-        lines, compared = collect_lines(deck, JIT, ALN)
+        lines, stats, sup, err = collect_lines(deck, JIT, ALN, intended)
     except Exception as e:
         return [], [f'P1/P3 geometry : 계기 오류({type(e).__name__}: {e}) — UNMEASURED (0 아님)']
     notes.append(f'P1/P3 geometry(목록) : 후보 {len(lines)}건 — 🟥 절대 목록으로 읽지 마라, '
                  f'P3 기저 오탐이 코퍼스마다 수십 건일 수 있다(원 코퍼스 실측 76건). '
-                 f'`geometry.baseline` 을 쓰는 편집-델타 용법이 정확하다 '
-                 f'(P1 대조된 도형-쌍 {compared}'
-                 + ('' if compared else ' — 🟥 UNMEASURED, 「튐 없음」이 아니다') + ')')
+                 f'`geometry.baseline` 을 쓰는 편집-델타 용법이 정확하다')
+    notes.append(f'   P1 결박 : {_fmt_stats(stats)}')
     for l in lines:
         notes.append(l)
-    return [], notes
+    return [], notes + _tail(sup, err)
