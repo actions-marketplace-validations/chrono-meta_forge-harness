@@ -808,6 +808,8 @@ for _pair in \
   "scripts/map_postprocess.py|scripts/test_map_postprocess_lanes.sh" \
   `# ── 플로어 없는 채널(2026-09-14): 원격 자율 노드가 FH 자산을 바꾸면 마커가 tracks/ 와 함께 휘발한다. 실측 2/2(#675·#716). CI 가 gitignored 마커를 구조적으로 못 보므로, 그 채널에만 «마커가 커밋 기록에 실려 왔나» 를 건다 ──` \
   "scripts/remote_marker_gate.sh|scripts/test_remote_marker_gate_lanes.sh" \
+  `# ── pipefail × 조기종료 소비자 × 64 KiB 파이프 버퍼(2026-09-21): 「생산자 | grep -q」 는 **찾았을 때만** 거짓 빨강을 낸다. 실사고 = PR #782 의 validate 가 같은 커밋에서 push 초록·pull_request 빨강으로 갈렸다. known-positive 가 결정적이라 확률 레인이 아니다 ──` \
+  "scripts/sync_to_be_lanes.sh|scripts/test_pipefail_sigpipe_lanes.sh" \
   `# ── 휘발 클론 부트스트랩(2026-09-21): 훅이 안 걸린 클론에서 커밋은 무음으로 성공한다. SUBJECT 는 그 계기의 판정과 **부작용 부재**다 ──` \
   "scripts/gate_bootstrap_ephemeral.sh|scripts/test_gate_bootstrap_ephemeral_lanes.sh" \
   `# ── 발신 전 3프로브(2026-09-18): 비소유 레포에 PR 을 «열기 직전» 에 건다. 실측 — outbound 9건 중 기술 결함 지적 3건이 전부 같은 형태다: 우리 가드와 우리 테스트가 «대상의 모형» 위에서 돌았고, 메인테이너의 증거는 우리가 한 번도 안 돌린 실행이었다 ──` \
