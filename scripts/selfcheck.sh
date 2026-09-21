@@ -485,6 +485,44 @@ else
   fail=1
 fi
 
+# pipefail 조기종료 클래스 잠금 (2026-09-21) — #785 가 한 자리를 고쳤고, 그 파일에 같은 형태가
+# **아직 셋** 남아 있었다(sync_to_be_lanes.sh:153·571·599, 생산자도 같은 `_sync_src`). 목록형
+# 잠금이 왜 안 되는지의 실물 증거다. 🟥 이 스캐너는 «레포 전체 0» 을 요구하지 않는다 — 오늘
+# 113 곳이라 그건 만족 불가능한 요구이고 override 훈련이다(§Mechanization Boundary). 잠그는
+# 것은 **이 변경이 새 사례를 들여오는가 = 0** 이다. 여기서는 그 계기가 살아 있는지만 본다.
+if [ ! -f scripts/pipefail_earlyexit_scan.sh ]; then
+  _absent_subject_verdict "pipefail class-lock lanes" "scripts/pipefail_earlyexit_scan.sh" || fail=1
+elif [ -f scripts/test_pipefail_class_lock_lanes.sh ]; then
+  # 🟥 출력을 삼키지 마라. 초판은 둘 다 `>/dev/null 2>&1` 이었고, CI 에서 빨개졌을 때
+  #    «known-pair calibration failed» 한 줄만 남아 **어느 팔이 깨졌는지 알 수 없었다.**
+  #    실패는 시끄러워야 한다 — 진단을 지우면 재현이 한 라운드씩 늘어난다.
+  _pf_out="$(bash scripts/pipefail_earlyexit_scan.sh --self-test 2>&1)" || {
+    echo "FAIL  pipefail class-lock selftest: known-pair calibration failed"
+    printf '%s\n' "$_pf_out" | sed 's/^/      /'
+    fail=1
+  }
+  # 🟥 **rc=1(실패)과 rc=2(계기 오류)를 갈라서 받는다.** 스위트 계약이 `0 통과 · 1 실패 ·
+  #    2 팔 하나 이상 UNMEASURED` 인데, 초판은 `||` 로 둘을 같은 값으로 읽었다.
+  #    실측 2026-09-21: 런타임 프로브의 한 표기(`… | awk "/NEEDLE/{exit}"`)가 **맥에서 5/5,
+  #    리눅스 mawk 에서 0/5** 다. 그건 이 레포의 결함이 아니라 «이 환경에서 그 결함을 만들 수
+  #    없다» 는 사실이고, FAIL 로 렌더하면 리눅스 CI 가 영구 빨강이 된다.
+  #    ⇒ rc=2 는 **시끄럽게 표면화하되 막지 않는다**(커밋은 가역 표면이고, 이 저장소가
+  #    `portability_lint`·①-b 에 쓰는 것과 같은 형태다). 🟥 «통과» 로 접지는 않는다 —
+  #    줄이 남고, 무엇이 미측정인지 이름이 찍힌다.
+  _pf_out="$(bash scripts/test_pipefail_class_lock_lanes.sh 2>&1)"; _pf_rc=$?
+  case "$_pf_rc" in
+    0) : ;;
+    2) echo "⚠️  pipefail class-lock lanes: 팔 하나 이상 UNMEASURED (계기 오류 — 통과 아님, 막지도 않음)"
+       printf '%s\n' "$_pf_out" | grep -E '^  ⬜' | sed 's/^/      /' ;;
+    *) echo "FAIL  pipefail class-lock lanes (rc=$_pf_rc)"
+       printf '%s\n' "$_pf_out" | grep -vE '^  ✅' | sed 's/^/      /'
+       fail=1 ;;
+  esac
+else
+  echo "FAIL  pipefail class-lock: scanner present but its anchor is missing"
+  fail=1
+fi
+
 # 휘발 클론 부트스트랩 (2026-09-21 신설) — 클라우드 컨테이너처럼 훅·기록·패턴 층이 없는
 # 체크아웃에서 «무엇을 세울 수 있고 무엇이 구조적으로 못 서는가»를 가르는 계기. 게이트가
 # 아니라 계기다(어떤 훅도 안 부른다) — 그래서 앵커는 여기 하나뿐이고, 레인이 안 돌면 이
