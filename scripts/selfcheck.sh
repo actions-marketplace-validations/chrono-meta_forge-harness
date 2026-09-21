@@ -806,6 +806,10 @@ for _pair in \
   "docs/map/fh_assets.architecture.json|scripts/test_fh_map_paths_lanes.sh" \
   `# ── 지도 후처리(2026-09-06): 발행 폭 하한 + SVG 재생성. 리터럴 드리프트를 fail-closed 로 잡는다 ──` \
   "scripts/map_postprocess.py|scripts/test_map_postprocess_lanes.sh" \
+  `# ── 지도 «깜빡임» 실물 렌더(2026-09-21): 위 줄은 억제 코드가 **문서에 있나**를 본다. 이 줄은 그것이 **실제 렌더에서 듣나**를 본다 — 첫 페인트 프레임과 헤더 점의 픽셀. 브라우저가 없는 머신에서는 레인이 NOT MEASURED 로 크게 적고 rc=0 으로 끝난다(되돌릴 수 있는 표면이라 advisory 로 떨어뜨린다) ──` \
+  "scripts/map_flash_render_probe.js|scripts/test_map_flash_render_lanes.sh" \
+  `# ── 휘도계(2026-09-21): 위 레인의 «눈» 이다. 브라우저 뒤에 숨기면 브라우저 없는 머신(= CI)에서 앵커가 통째로 죽으므로 자기 레인으로 분리한다 — 표준 라이브러리 전용이라 어디서든 돈다 ──` \
+  "scripts/png_luma.py|scripts/test_png_luma_lanes.sh" \
   `# ── 플로어 없는 채널(2026-09-14): 원격 자율 노드가 FH 자산을 바꾸면 마커가 tracks/ 와 함께 휘발한다. 실측 2/2(#675·#716). CI 가 gitignored 마커를 구조적으로 못 보므로, 그 채널에만 «마커가 커밋 기록에 실려 왔나» 를 건다 ──` \
   "scripts/remote_marker_gate.sh|scripts/test_remote_marker_gate_lanes.sh" \
   `# ── pipefail × 조기종료 소비자 × 64 KiB 파이프 버퍼(2026-09-21): 「생산자 | grep -q」 는 **찾았을 때만** 거짓 빨강을 낸다. 실사고 = PR #782 의 validate 가 같은 커밋에서 push 초록·pull_request 빨강으로 갈렸다. known-positive 가 결정적이라 확률 레인이 아니다 ──` \
