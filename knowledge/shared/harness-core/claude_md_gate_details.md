@@ -173,6 +173,32 @@ destroys live state without anyone noticing. This is why the loss class is calle
 
 ---
 
+### Scholarly deposit (Zenodo / DOI / arXiv) — measured 2026-09-07, why Step 1b exists
+
+Two things happened on the same day, on the same record (`10.5281/zenodo.22542168`, v1.0.1):
+
+1. **Form ≠ server.** The rich-text description and the companion-DOI related identifier were visible
+   in the deposit form and **absent** from `/api/records/<id>/draft`. The editor had not flushed its
+   state to the server. Nothing in the Pre-Publish gate covered this surface; a hand API read caught it
+   minutes before Publish.
+2. **The machine fields outlive the PDF.** v1.0.1 is a *corrective* release: its body fixes eleven
+   misattributed references. Its Zenodo `references` field still carried **all eleven** pre-correction
+   attributions — the exact strings the release existed to retract — because the PDF was replaced and
+   the metadata was not. `references` / `related identifiers` are what DataCite and citation graphs
+   consume; the PDF is what a human opens. Fixed by editing the record (22 → 24 entries, verified
+   server-side, DOI unchanged).
+
+Consequences that became the four Step 1b items: read the draft through the **service's** API (Zenodo
+InvenioRDM `/api/records/<id>/draft`, legacy `/api/deposit/depositions/<id>`, figshare
+`/v2/account/articles/<id>`), compare against the text you pasted (string vs JSON), md5 the file, and
+on a corrective release diff the machine fields too. The post-publish read is a **detector**, not a
+gate — a wrong field there is fixed by a new corrective version, never silently.
+
+Salience check (same day, floor tier, blind, reps 3, one variable — the edited text injected into a
+clean clone via `--setup`): before 0–1/3 → after 3/3 on all four items. ⚠️ The first sim run was void:
+`sim_isolated_run.sh` clones **HEAD**, so uncommitted edits were absent from every arm — it measured
+the pre-change tree. Recorded so the next author injects the working tree instead of trusting the clone.
+
 ## §Pre-Publish-Hook-Coverage
 
 **Hook coverage — three distinct actions** (refined 2026-06-17 for (a)/(b); (c) added 2026-06-27):
@@ -451,11 +477,15 @@ as-is rather than rewritten).
 > ⚠️ A *different* residual on `main` is still real and must not be folded into the one just
 > retracted — but the residual's own description was itself stale and needed correction on
 > 2026-08-12 (live re-check, `[[reference_github_protection_two_layers]]`): legacy
-> `required_status_checks.contexts` is **`["validate"]`**, not `[]` — a green `validate` check IS
-> required before a PR can merge, and `GET /rules/branches/main` carries no competing
-> `required_status_checks` rule, so the legacy field is the effective one here. `validate`
+> `required_status_checks.contexts` is **`["validate", "new-code-anchor"]`**, not `[]` — 🟥 re-read
+> 2026-09-17 (both layers): the 2026-08-12 line said `["validate"]` and that had gone stale once
+> `new-code-anchor` was promoted; a green `validate` AND a green `new-code-anchor` are required
+> before a PR can merge, and `GET /rules/branches/main` carries only `non_fast_forward` — no
+> competing `required_status_checks` rule, so the legacy field is the effective one here. `validate`
 > (`.github/workflows/validate.yml`) is a **separate job from Axis 1** (`regression-guard.yml`) —
-> Axis 1 is still not required, see the 4-axis section below. The gap on `validate` is
+> Axis 1 is still not required, see the 4-axis section below. 🟥 But since 2026-08-29 (#552) Axis 1
+> **does run** on every 4-axis asset class (its `paths:` was widened); the remaining gap is
+> "runs but not required", not "does not run". The gap on `validate` is
 > `strict: false`: that check re-runs on every push to the PR branch, but nothing re-forces it
 > against a **moving** main after it last ran — so a check that passed can still land behind
 > concurrent merges it never saw.

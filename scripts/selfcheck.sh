@@ -402,6 +402,24 @@ else
   fail=1
 fi
 
+# count_check's COUNT DECLARATION parser — the sweep reads "N skills"/"N agents" out of a plugin
+# description and compares it to disk. #768 shipped that sweep and wrote its own residual down:
+# «순회는 description 의 첫 N skills 패턴만 읽는다 — 과탐/미탐 방향 미측정». Both were measured
+# 2026-09-21 and both were real: a stale declaration masked by an earlier prose number went GREEN
+# (false PASS, the #763/#768 substring class a third time), and `M1/M2/M3 skill tier map` — live
+# in marketplace.json — was read AS a declaration (false FAIL). Without this anchor the "모호≠통과"
+# branch and the boundary can both be deleted with every gate still green.
+if [ ! -f scripts/count_check.sh ]; then
+  _absent_subject_verdict "count_check declaration lanes" "scripts/count_check.sh" || fail=1
+elif [ -f scripts/test_count_check_decl_lanes.sh ]; then
+  if ! bash scripts/test_count_check_decl_lanes.sh; then
+    fail=1
+  fi
+else
+  echo "FAIL  count_check declaration lanes: count_check.sh present but its anchor is missing"
+  fail=1
+fi
+
 # The public-surface scanner's SINGLE-FILE and MISUSE paths. Same subject-present/anchor-gone shape:
 # the scanner is a fail-closed gate on an irreversible surface, and its failure mode is a green that
 # was never earned — a misuse, an unloaded pattern set, or dead plumbing all used to render as clean.
@@ -415,6 +433,196 @@ elif [ -f scripts/test_psa_singlefile_lanes.sh ]; then
   fi
 else
   echo "FAIL  psa single-file lanes: psa_scan_lib.sh present but its anchor is missing"
+  fail=1
+fi
+
+# doc-claim triad (bridge ①) — a doc that says «A uses B» where A never executes B.
+# Subject = scripts/doc_claim_triad_scan.py (review surface, not a verdict). Wired in the same
+# commit that created its lane, because lane_runner_check.sh rejects an undeclared unwired suite —
+# and adding it to DEBT instead would be the regrowth that file exists to stop.
+if [ ! -f scripts/doc_claim_triad_scan.py ]; then
+  _absent_subject_verdict "doc-claim triad lanes" "scripts/doc_claim_triad_scan.py" || fail=1
+elif [ -f scripts/test_doc_claim_triad_lanes.sh ]; then
+  if ! bash scripts/test_doc_claim_triad_lanes.sh; then
+    fail=1
+  fi
+else
+  echo "FAIL  doc-claim triad lanes: doc_claim_triad_scan.py present but its anchor is missing"
+  fail=1
+fi
+
+# typed-finding pipeline — fleet (multi-family, parallel) + reject stage (cross-family verdict, code
+# drops false positives). Subject = scripts/finding_fleet.sh + scripts/finding_verify.py.
+if [ ! -f scripts/finding_verify.py ]; then
+  _absent_subject_verdict "finding pipeline lanes" "scripts/finding_verify.py" || fail=1
+elif [ -f scripts/test_finding_pipeline_lanes.sh ]; then
+  if ! bash scripts/finding_fleet.sh --selftest >/dev/null 2>&1; then
+    echo "FAIL  finding fleet selftest: known-pair calibration failed"; fail=1
+  fi
+  if ! bash scripts/test_finding_pipeline_lanes.sh; then
+    fail=1
+  fi
+else
+  echo "FAIL  finding pipeline lanes: scripts present but their anchor is missing"
+  fail=1
+fi
+
+# policy-lens scorer — the known-pair that decides whether a blind sim's numbers may be trusted.
+# 🟥 Wired here because the gate caught it MENTION_ONLY: the scorer shipped with its own
+# --selftest and no runner surface ever dispatched it, so «the suite is green» said nothing
+# about this file. That is the same shape the scorer itself was fixed for on 2026-09-21
+# (a zero-row run reporting rc=0). A calibration nobody runs is not a calibration.
+if [ ! -f scripts/score_policy_lens.sh ]; then
+  _absent_subject_verdict "policy-lens scorer lanes" "scripts/score_policy_lens.sh" || fail=1
+elif [ -f scripts/test_policy_lens_scorer_lanes.sh ]; then
+  # direct dispatch of the subject's own known pair (caller surface), then the lane suite —
+  # P2 there is the load-bearing one: it re-scores the COMMITTED round-1 runs and demands the
+  # recorded SCORES.tsv byte-for-byte, so a scorer change cannot silently restate a published
+  # number. P3 is P2's control (one tampered cell must turn it red).
+  if ! bash scripts/score_policy_lens.sh --selftest >/dev/null 2>&1; then
+    echo "FAIL  policy-lens scorer selftest: known-pair calibration failed"; fail=1
+  fi
+  if ! bash scripts/test_policy_lens_scorer_lanes.sh; then
+    fail=1
+  fi
+else
+  echo "FAIL  policy-lens scorer lanes: script present but its anchor is missing"
+  fail=1
+fi
+
+# gate-shape classifier — the mechanical half of the unmapped-file trigger of the Field-Harness
+# Load-Bearing Change Gate (2026-09-08). A classifier of scope, not a verdict; its lane holds the
+# known-pair (exposure/verdict positives · util/comment negatives · Promise reject( FP anchor).
+if [ ! -f scripts/gate_shape_scan.sh ]; then
+  _absent_subject_verdict "gate-shape lanes" "scripts/gate_shape_scan.sh" || fail=1
+elif [ -f scripts/test_gate_shape_scan_lanes.sh ]; then
+  # direct dispatch of the subject's own selftest (caller surface for the ratchet), then the lane
+  if ! bash scripts/gate_shape_scan.sh --selftest >/dev/null 2>&1; then
+    echo "FAIL  gate-shape selftest: known-pair calibration failed"; fail=1
+  fi
+  if ! bash scripts/test_gate_shape_scan_lanes.sh; then
+    fail=1
+  fi
+else
+  echo "FAIL  gate-shape lanes: gate_shape_scan.sh present but its anchor is missing"
+  fail=1
+fi
+
+# pipefail 조기종료 클래스 잠금 (2026-09-21) — #785 가 한 자리를 고쳤고, 그 파일에 같은 형태가
+# **아직 셋** 남아 있었다(sync_to_be_lanes.sh:153·571·599, 생산자도 같은 `_sync_src`). 목록형
+# 잠금이 왜 안 되는지의 실물 증거다. 🟥 이 스캐너는 «레포 전체 0» 을 요구하지 않는다 — 오늘
+# 113 곳이라 그건 만족 불가능한 요구이고 override 훈련이다(§Mechanization Boundary). 잠그는
+# 것은 **이 변경이 새 사례를 들여오는가 = 0** 이다. 여기서는 그 계기가 살아 있는지만 본다.
+if [ ! -f scripts/pipefail_earlyexit_scan.sh ]; then
+  _absent_subject_verdict "pipefail class-lock lanes" "scripts/pipefail_earlyexit_scan.sh" || fail=1
+elif [ -f scripts/test_pipefail_class_lock_lanes.sh ]; then
+  # 🟥 출력을 삼키지 마라. 초판은 둘 다 `>/dev/null 2>&1` 이었고, CI 에서 빨개졌을 때
+  #    «known-pair calibration failed» 한 줄만 남아 **어느 팔이 깨졌는지 알 수 없었다.**
+  #    실패는 시끄러워야 한다 — 진단을 지우면 재현이 한 라운드씩 늘어난다.
+  _pf_out="$(bash scripts/pipefail_earlyexit_scan.sh --self-test 2>&1)" || {
+    echo "FAIL  pipefail class-lock selftest: known-pair calibration failed"
+    printf '%s\n' "$_pf_out" | sed 's/^/      /'
+    fail=1
+  }
+  # 🟥 **rc=1(실패)과 rc=2(계기 오류)를 갈라서 받는다.** 스위트 계약이 `0 통과 · 1 실패 ·
+  #    2 팔 하나 이상 UNMEASURED` 인데, 초판은 `||` 로 둘을 같은 값으로 읽었다.
+  #    실측 2026-09-21: 런타임 프로브의 한 표기(`… | awk "/NEEDLE/{exit}"`)가 **맥에서 5/5,
+  #    리눅스 mawk 에서 0/5** 다. 그건 이 레포의 결함이 아니라 «이 환경에서 그 결함을 만들 수
+  #    없다» 는 사실이고, FAIL 로 렌더하면 리눅스 CI 가 영구 빨강이 된다.
+  #    ⇒ rc=2 는 **시끄럽게 표면화하되 막지 않는다**(커밋은 가역 표면이고, 이 저장소가
+  #    `portability_lint`·①-b 에 쓰는 것과 같은 형태다). 🟥 «통과» 로 접지는 않는다 —
+  #    줄이 남고, 무엇이 미측정인지 이름이 찍힌다.
+  _pf_out="$(bash scripts/test_pipefail_class_lock_lanes.sh 2>&1)"; _pf_rc=$?
+  case "$_pf_rc" in
+    0) : ;;
+    2) echo "⚠️  pipefail class-lock lanes: 팔 하나 이상 UNMEASURED (계기 오류 — 통과 아님, 막지도 않음)"
+       printf '%s\n' "$_pf_out" | grep -E '^  ⬜' | sed 's/^/      /' ;;
+    *) echo "FAIL  pipefail class-lock lanes (rc=$_pf_rc)"
+       printf '%s\n' "$_pf_out" | grep -vE '^  ✅' | sed 's/^/      /'
+       fail=1 ;;
+  esac
+else
+  echo "FAIL  pipefail class-lock: scanner present but its anchor is missing"
+  fail=1
+fi
+
+# 휘발 클론 부트스트랩 (2026-09-21 신설) — 클라우드 컨테이너처럼 훅·기록·패턴 층이 없는
+# 체크아웃에서 «무엇을 세울 수 있고 무엇이 구조적으로 못 서는가»를 가르는 계기. 게이트가
+# 아니라 계기다(어떤 훅도 안 부른다) — 그래서 앵커는 여기 하나뿐이고, 레인이 안 돌면 이
+# 스크립트는 그냥 산문이 된다. 레인의 하중 지는 자리는 L8 «증거를 안 만든다»: 마커를
+# 자동 생성하는 부트스트랩은 4축을 가짜로 닫는 것이고 fh_4axis_gate.md 가 금지한다.
+if [ ! -f scripts/gate_bootstrap_ephemeral.sh ]; then
+  _absent_subject_verdict "ephemeral-bootstrap lanes" "scripts/gate_bootstrap_ephemeral.sh" || fail=1
+elif [ -f scripts/test_gate_bootstrap_ephemeral_lanes.sh ]; then
+  # 주체의 자기 known-pair 를 먼저 직접 부른다(계기 교정), 그다음 레인.
+  # 🟥 rc=1 은 «이 기계에 UTF-8 로케일이 없다»는 정직한 미측정이므로 실패로 치지 않는다.
+  #    계기 고장(rc=10)만 실패다 — 못 잰 것과 고장난 것은 다른 명제다.
+  _gbe_rc=0
+  bash scripts/gate_bootstrap_ephemeral.sh --selftest >/dev/null 2>&1 || _gbe_rc=$?
+  if [ "$_gbe_rc" = "10" ]; then
+    echo "FAIL  ephemeral-bootstrap selftest: 계기 오류(wc -w 컨트롤 사망)"; fail=1
+  elif [ "$_gbe_rc" != "0" ]; then
+    # rc=1 은 「못 쟀다」가 아니라 **측정된 결함**이다 — 이 기계에서 정직한 한글이 훅의
+    # 비공허성 바닥을 못 넘는다(LC_CTYPE). 수리는 PR #780. 여기서 FAIL 로 안 올리는 이유는
+    # 환경 조건이지 이 레포의 회귀가 아니어서다 — 과차단은 override 를 훈련시킨다.
+    echo "WARN  ephemeral-bootstrap selftest: 정직한 한글이 비공허성 바닥을 못 넘는다(LC_CTYPE) — 한국어 마커가 차단된다"
+  fi
+  if ! bash scripts/test_gate_bootstrap_ephemeral_lanes.sh >/dev/null; then
+    echo "FAIL  ephemeral-bootstrap lanes"; fail=1
+  fi
+else
+  echo "FAIL  ephemeral-bootstrap lanes: gate_bootstrap_ephemeral.sh present but its anchor is missing"
+  fail=1
+fi
+
+# env-layer fingerprint — 두 체크아웃(운영자 맥 ↔ 클라우드 클론)의 **층 대조**를 가능하게 하는
+# 계기. 게이트가 아니라 계기이므로 어떤 훅도 이걸 부르지 않는다 — 그래서 앵커는 여기 하나뿐이고,
+# 레인이 안 돌면 이 스크립트는 그냥 산문이 된다(lane_runner_check.sh 가 세는 클래스).
+if [ ! -f scripts/env_layer_fingerprint.sh ]; then
+  _absent_subject_verdict "env-layer lanes" "scripts/env_layer_fingerprint.sh" || fail=1
+elif [ -f scripts/test_env_layer_fingerprint_lanes.sh ]; then
+  # 주체의 자기 known-pair 를 먼저 직접 부른다(계기 교정), 그다음 레인.
+  if ! bash scripts/env_layer_fingerprint.sh --selftest >/dev/null 2>&1; then
+    echo "FAIL  env-layer selftest: known-pair calibration failed"; fail=1
+  fi
+  if ! bash scripts/test_env_layer_fingerprint_lanes.sh >/dev/null; then
+    echo "FAIL  env-layer lanes"; fail=1
+  fi
+else
+  echo "FAIL  env-layer lanes: env_layer_fingerprint.sh present but its anchor is missing"
+  fail=1
+fi
+
+# locale-invariance — 같은 마커를 두 로케일에서 읽었을 때 판정이 같은가. 훅의 비공허성 바닥과
+# 「①영혼 복붙」 검출이 `LC_CTYPE` 에 의존했다(2026-09-21, 갓 클론한 컨테이너에서 실측: 마커
+# 레인 22건이 `LC_ALL` 만으로 뒤집혔고, 방향이 과차단·무음침묵·fail-OPEN 셋이었다).
+# 🟥 UTF-8 로케일이 없는 기계에서는 rc=2 다 — 대조군 없는 초록은 측정이 아니므로 FAIL 로 센다.
+if [ ! -f scripts/test_locale_invariance_lanes.sh ]; then
+  echo "FAIL  locale-invariance lanes: scripts/test_locale_invariance_lanes.sh 가 없다 (부재는 통과가 아니다)"
+  fail=1
+elif ! bash scripts/test_locale_invariance_lanes.sh >/dev/null 2>&1; then
+  echo "FAIL  locale-invariance lanes"
+  fail=1
+fi
+
+# multibyte-bracket lint — 열거로는 안 닫힌다. POSIX 브래킷은 비-UTF-8 로케일에서 바이트
+# 집합이 되고, 방향은 자리마다 다르다(2026-09-21 실측: fail-OPEN 둘 · 과차단 하나).
+# 전수를 세려던 첫 계기가 11 중 1 을 놓쳤기 때문에 사람의 열거도 자동 열거도 믿지 않는다.
+# 린트는 매 호출마다 known-pair 로 자가검정하고 그게 안 갈리면 rc=2 로 죽는다 — 여기서는 둘 다 FAIL 이다.
+if [ ! -f scripts/multibyte_bracket_lint.sh ]; then
+  echo "FAIL  multibyte-bracket lint: scripts/multibyte_bracket_lint.sh 가 없다 (부재는 통과가 아니다)"
+  fail=1
+elif ! bash scripts/multibyte_bracket_lint.sh >/dev/null 2>&1; then
+  echo "FAIL  multibyte-bracket lint (게이트 파일의 브래킷 안에 멀티바이트, 또는 자가검정 실패)"
+  fail=1
+fi
+# 그리고 린트 자신의 앵커. 내장 `_calibrate` 는 린트 파일 안에 살아서 정규식이 약해져도
+# 자기 픽스처는 통과할 수 있다 — 이 스위트는 **실물 훅의 사본을 되돌려** 잡히는지를 본다.
+if [ ! -f scripts/test_multibyte_bracket_lint_lanes.sh ]; then
+  echo "FAIL  multibyte-bracket lint lanes: scripts/test_multibyte_bracket_lint_lanes.sh 가 없다 (부재는 통과가 아니다)"
+  fail=1
+elif ! bash scripts/test_multibyte_bracket_lint_lanes.sh >/dev/null 2>&1; then
+  echo "FAIL  multibyte-bracket lint lanes"
   fail=1
 fi
 
@@ -600,12 +808,20 @@ fi
 # resolves to "SKIP (subject not in files[], and absent)" — the anchor arm is never reached.
 _LANE_TO=""; command -v timeout >/dev/null 2>&1 && _LANE_TO="timeout 300"
 for _pair in \
+  `# 사용 원장 (2026-09-13 신설). SUBJECT 를 원장 모듈로 잡는다 — 배선이 끊기는 자리는 preprep.py 의 __main__ 한 줄이 아니라 모듈이 사라지는 쪽이고, import 가 try/except 라 모듈이 없으면 조용히 무동작으로 돌아간다. 그 무음이 이 레인이 잡을 것이다.` \
+  "plugins/fh-preprep/skills/preprep/usage_ledger.py|scripts/test_usage_ledger_lanes.sh" \
+  `# fh-run 의 이름→스킬 해석기 (2026-09-13 신설). preprep 승격이 --skill preprep 을 조용히 깨뜨렸고, fh-qp 의 4개는 애초부터 안 닿고 있었다. 소비자 대면 경로인데 커버리지가 0이었다.` \
+  "scripts/fh-run.sh|scripts/test_fh_run_resolver_lanes.sh" \
+  `# 채널 인벤토리 (2026-09-13 신설). «부재» 주장 전에 디렉터리의 채널을 세고, 읽었다고 선언한 것과 대조한다. 같은 날 세 번 낸 실수 — 내가 연 채널에만 없는 것을 무기록으로 단정 — 의 기계층.` \
+  "scripts/channel_inventory.sh|scripts/test_channel_inventory_lanes.sh" \
   "scripts/degrade_probe_capability.sh|scripts/test_capability_entrypoint_shipping.sh" \
   "scripts/chamber_run.sh|scripts/test_chamber_run_lanes.sh" \
   "scripts/chamber_candidate_collect.sh|scripts/test_chamber_sig_lanes.sh" \
   "scripts/destructive_pre_gate.sh|scripts/test_destructive_pre_gate_lanes.sh" \
   "templates/.git-hooks/pre-push|scripts/test_prepush_destructive_lanes.sh" \
   "templates/.git-hooks/pre-push|scripts/test_prepush_destructive_liveness.sh" \
+  `# ── 증거 vs 판정 토큰 충돌(2026-09-19). SUBJECT 는 훅이 아니라 «되돌림 프로브 자신»이다 — 이 레인이 재는 것은 게이트의 동작이 아니라 그 프로브의 «출력 계약»(자기가 authored 한 줄에만 ❌ 를 쓴다)이고, 이 집계기가 ❌ 로 실패를 판정하므로 둘이 같은 채널을 공유한다. 실측: run 35426860480 의 로그를 사람이 두 번 연속 오귀속했다 ──` \
+  "scripts/test_prepush_destructive_liveness.sh|scripts/test_liveness_echo_token_lanes.sh" \
   "templates/.git-hooks/pre-push|scripts/test_push_zone_lanes.sh" \
   "scripts/push_zone_check.sh|scripts/test_push_zone_lanes.sh" \
   "scripts/session_close_check.sh|scripts/test_push_zone_lanes.sh" \
@@ -627,7 +843,7 @@ for _pair in \
   "templates/.git-hooks/pre-commit|scripts/test_gate_two_verdicts_lanes.sh" \
   `# ── fh-qp (QP) — chamber run #18 EMIT 2026-09-05: qp_tools.sh known-pair + residency lanes ──` \
   "plugins/fh-qp/scripts/qp_tools.sh|scripts/test_fh_qp_lanes.sh" \
-  "plugins/fh-commons/skills/preprep/diagram_from_json.py|scripts/test_preprep_diagram_lanes.sh" \
+  "plugins/fh-preprep/skills/preprep/diagram_from_json.py|scripts/test_preprep_diagram_lanes.sh" \
   `# ── action.yml — the GitHub Action wrapper: its exit-code mapping is where a typed verdict could become a boolean ──` \
   "action.yml|scripts/test_action_yml_lanes.sh" \
   "scripts/sim_isolated_run.sh|scripts/test_sim_path_isolation_lanes.sh" \
@@ -638,12 +854,36 @@ for _pair in \
   "scripts/fixture_guard_lib.sh|scripts/test_fixture_guard_lanes.sh" \
   "scripts/stray_path_scan.sh|scripts/test_stray_path_lanes.sh" \
   "scripts/session_close_check.sh|scripts/test_stray_path_lanes.sh" \
+  `# ── ①-g stale-ref (2026-09-21 신설) — #773 이 「배선 안 함」이라 적은 자리의 호출부. SUBJECT 는 스캐너가 아니라 «마감 블록»이다: 스캐너 자체는 test_stale_ref_scan_lanes.sh 가 이미 앵커한다 ──` \
+  "scripts/session_close_check.sh|scripts/test_stale_ref_close_lanes.sh" \
+  `# 티키타카 채점기 (2026-09-19 신설) — 다중턴 sim 의 «수렴/반영» 을 채점한다. 러너(--turns)는 있었고 채점기가 0줄이었다.` \
+  "scripts/tikitaka_score.py|scripts/test_tikitaka_score_lanes.sh" \
+  `# 체크리스트 unblocked (2026-09-19 신설) — 막혀 있던 행의 블로커가 DONE 이 됐는데 그 행이 안 움직였나.
+  #   운영자 지적: «내 발화가 도중에 열화되었다 … 테스트 한 차례 끝날 때마다 들여다봐야 할 것 같다».
+  #   SUBJECT 를 session_checklist.py 로 잡는다 — 이 레인이 재는 것은 그 도구의 판정이다.` \
+  "scripts/session_checklist.py|scripts/test_checklist_unblocked_lanes.sh" \
   "templates/.git-hooks/pre-commit|scripts/test_hook_leg_wiring_lanes.sh" \
   ".claude/soul_tenets.txt|scripts/test_marker_soul_tenet_lanes.sh" \
   "docs/map/fh_assets.architecture.json|scripts/test_fh_map_paths_lanes.sh" \
   `# ── 지도 후처리(2026-09-06): 발행 폭 하한 + SVG 재생성. 리터럴 드리프트를 fail-closed 로 잡는다 ──` \
   "scripts/map_postprocess.py|scripts/test_map_postprocess_lanes.sh" \
+  `# ── 지도 «깜빡임» 실물 렌더(2026-09-21): 위 줄은 억제 코드가 **문서에 있나**를 본다. 이 줄은 그것이 **실제 렌더에서 듣나**를 본다 — 첫 페인트 프레임과 헤더 점의 픽셀. 브라우저가 없는 머신에서는 레인이 NOT MEASURED 로 크게 적고 rc=0 으로 끝난다(되돌릴 수 있는 표면이라 advisory 로 떨어뜨린다) ──` \
+  "scripts/map_flash_render_probe.js|scripts/test_map_flash_render_lanes.sh" \
+  `# ── 휘도계(2026-09-21): 위 레인의 «눈» 이다. 브라우저 뒤에 숨기면 브라우저 없는 머신(= CI)에서 앵커가 통째로 죽으므로 자기 레인으로 분리한다 — 표준 라이브러리 전용이라 어디서든 돈다 ──` \
+  "scripts/png_luma.py|scripts/test_png_luma_lanes.sh" \
+  `# ── 플로어 없는 채널(2026-09-14): 원격 자율 노드가 FH 자산을 바꾸면 마커가 tracks/ 와 함께 휘발한다. 실측 2/2(#675·#716). CI 가 gitignored 마커를 구조적으로 못 보므로, 그 채널에만 «마커가 커밋 기록에 실려 왔나» 를 건다 ──` \
+  "scripts/remote_marker_gate.sh|scripts/test_remote_marker_gate_lanes.sh" \
+  `# ── pipefail × 조기종료 소비자 × 64 KiB 파이프 버퍼(2026-09-21): 「생산자 | grep -q」 는 **찾았을 때만** 거짓 빨강을 낸다. 실사고 = PR #782 의 validate 가 같은 커밋에서 push 초록·pull_request 빨강으로 갈렸다. known-positive 가 결정적이라 확률 레인이 아니다 ──` \
+  "scripts/sync_to_be_lanes.sh|scripts/test_pipefail_sigpipe_lanes.sh" \
+  `# ── 휘발 클론 부트스트랩(2026-09-21): 훅이 안 걸린 클론에서 커밋은 무음으로 성공한다. SUBJECT 는 그 계기의 판정과 **부작용 부재**다 ──` \
+  "scripts/gate_bootstrap_ephemeral.sh|scripts/test_gate_bootstrap_ephemeral_lanes.sh" \
+  `# ── 발신 전 3프로브(2026-09-18): 비소유 레포에 PR 을 «열기 직전» 에 건다. 실측 — outbound 9건 중 기술 결함 지적 3건이 전부 같은 형태다: 우리 가드와 우리 테스트가 «대상의 모형» 위에서 돌았고, 메인테이너의 증거는 우리가 한 번도 안 돌린 실행이었다 ──` \
+  "scripts/outbound_pr_gate.sh|scripts/test_outbound_pr_gate_lanes.sh" \
+  `# ── 발행 «확인» 예산(2026-09-18): npm publish 는 이미 rc=0 으로 끝났고 이 스크립트는 전파만 관측한다. 둘을 한 종료코드로 접으면 성공한 발행이 빨간 잡이 되고, 그 빨강이 정확히 «손 발행» 을 훈련시킨다(v3.2.0·v3.4.0) ──` \
+  "scripts/publish_verify_poll.sh|scripts/test_publish_verify_poll_lanes.sh" \
+  ".github/workflows/validate.yml|scripts/test_remote_marker_gate_lanes.sh" \
   "templates/.git-hooks/pre-commit|scripts/test_precommit_staged_drift_lanes.sh" \
+  "templates/.git-hooks/pre-commit|scripts/test_precommit_gitlink_lanes.sh" \
   "templates/.git-hooks/pre-commit|scripts/test_marker_address_lanes.sh" \
   "templates/.git-hooks/pre-commit|scripts/test_precommit_pointer_index_lanes.sh" \
   "scripts/residency_closure_scan.py|scripts/test_residency_closure_lanes.sh" \
@@ -658,12 +898,13 @@ for _pair in \
   "scripts/fh-goal.sh|scripts/test_fh_goal_change_detection_lanes.sh" \
   "scripts/utterance_skill_probe.sh|scripts/test_utterance_skill_probe_lanes.sh" \
   `# ── preprep 스킬(2026-08-29). 주체는 스킬 안의 모듈이라 scripts/ 밖이다 ──` \
-  "plugins/fh-commons/skills/preprep/preprep.py|scripts/test_preprep_retired_lanes.sh" \
-  "plugins/fh-commons/skills/preprep/lane_progression.py|scripts/test_preprep_progression_lanes.sh" \
-  "plugins/fh-commons/skills/preprep/lane_adjacent_dup.py|scripts/test_preprep_adjacent_dup_lanes.sh" \
-  "plugins/fh-commons/skills/preprep/lane_promise.py|scripts/test_preprep_promise_lanes.sh" \
-  "plugins/fh-commons/skills/preprep/lane_slide_refs.py|scripts/test_preprep_slide_refs_lanes.sh" \
-  "plugins/fh-commons/skills/preprep/SKILL.md|scripts/test_preprep_drift_anchor.sh" \
+  "plugins/fh-preprep/skills/preprep/preprep.py|scripts/test_preprep_retired_lanes.sh" \
+  "plugins/fh-preprep/skills/preprep/lane_progression.py|scripts/test_preprep_progression_lanes.sh" \
+  "plugins/fh-preprep/skills/preprep/lane_adjacent_dup.py|scripts/test_preprep_adjacent_dup_lanes.sh" \
+  "plugins/fh-preprep/skills/preprep/lane_promise.py|scripts/test_preprep_promise_lanes.sh" \
+  "plugins/fh-preprep/skills/preprep/lane_slide_refs.py|scripts/test_preprep_slide_refs_lanes.sh" \
+  "plugins/fh-preprep/skills/preprep/lane_font.py|scripts/test_preprep_font_lanes.sh" \
+  "plugins/fh-preprep/skills/preprep/SKILL.md|scripts/test_preprep_drift_anchor.sh" \
   "scripts/test_preprep_drift_anchor.sh|scripts/test_preprep_drift_anchor_lanes.sh" \
   "scripts/field_canon_preload.sh|scripts/test_skill_canon_preload_lanes.sh" \
   `# ── round/ 회차 계기 4종(2026-09-01). 넷 다 한 스위트가 잡는다 — 주체별로 행을 둔다 ──` \
@@ -1282,6 +1523,22 @@ else
   fi
 fi
 
+# governor_board — 거버너/워크트리/계열 판. 자기검사 24 레인(known-pair 중심).
+# 🟥 이 계기의 핵심 known-pair 는 «마커 있음 → 계열이 나온다» ↔ «마커 없음 → 미측정» 이다.
+#    그 둘이 같은 글자로 나오면 판은 측정이 아니라 생성이고, 사람이 그걸 읽고 판단한다.
+#    subject 있는데 anchor 없으면 FAIL 이지 skip 이 아니다.
+if [ ! -f scripts/governor_board.sh ]; then
+  _absent_subject_verdict "governor_board --self-test" "scripts/governor_board.sh" || fail=1
+else
+  if ! bash scripts/governor_board.sh --self-test >/dev/null 2>&1; then
+    echo "FAIL  governor_board --self-test"
+    bash scripts/governor_board.sh --self-test 2>&1 | grep '❌' | head -5
+    fail=1
+  else
+    echo "PASS  governor_board --self-test (24 lanes)"
+  fi
+fi
+
 # launchd_wiring_check — 주기 실행(frontier-digest)이 실제로 배선됐나. 자기검사 10 레인.
 # 🟥 이 검사가 없던 동안, 추적본 plist 는 «템플릿»(/path/to/ 플레이스홀더)인데 «바꿨는지»도
 #    «걸렸는지»도 보는 것이 0개였다. 소비자는 digest 가 돈다고 믿으면서 한 번도 안 도는 상태로
@@ -1356,6 +1613,43 @@ elif [ -f scripts/test_branch_claim_lanes.sh ]; then
   fi
 else
   echo "FAIL  test_branch_claim_lanes.sh: branch_claim.sh present but its anchor is missing"
+  fail=1
+fi
+
+# prless_delta_scan lanes — «커밋은 됐는데 착륙 경로에 안 올라간» 델타를 세는 advisory 계기.
+# 🟥 레인의 하중선은 **음성 컨트롤**이다: 이 레포는 squash 머지를 쓰므로 순진한 per-commit 비교는
+#    이미 착륙한 브랜치를 «미착륙» 으로 읽는다(2026-09-19 실측: naive 33/40 · git cherry 17/40 ·
+#    이 계기 10/40). 양성만 있는 레인은 «전부 고발하는 계기» 도 통과시킨다.
+if [ -f scripts/prless_delta_scan.sh ]; then
+  if [ -f scripts/test_prless_delta_scan_lanes.sh ]; then
+    if ! bash scripts/test_prless_delta_scan_lanes.sh; then
+      fail=1
+    fi
+  else
+    echo "FAIL  test_prless_delta_scan_lanes.sh: prless_delta_scan.sh present but its anchor is missing"
+    fail=1
+  fi
+fi
+
+# temper_check lanes — 🟥 `templates/temper_check.sh` 는 게이트체인 7경로 중 **유일하게 실행 레인이
+# 0** 이었다(2026-09-14 frontier-digest 후보 #1 → 독립 재현으로 참 판정). 참조 6곳이 전부 비실행
+# 이었고, 그중 하나가 **바로 이 파일의 `bash -n` 목록**이다 — 즉 selfcheck 자신이 «구문 검사» 를
+# «검증» 으로 세고 있었다. steel-quench SKILL.md 의 T-1 행은 그 사이 그것을 `measured` 로 선언한다.
+# `bash -n` 은 계기가 아니다([[feedback_gate_verification_must_execute]]) — 아래가 그 자리를 실행으로
+# 바꾼다. 레인은 격리 픽스처(실물 내용 · 실제 두 커밋 쌍)를 쓰고 네트워크·API 를 안 탄다.
+#
+# ⚠️ Subject-absent 는 여기서도 FAIL 이다(SKIP 아님) — `templates/temper_check.sh` 는 package.json
+# files[] 에 있으므로 부재는 «정당한 미출하» 가 아니라 삭제다. 위 branch_claim 블록과 같은 근거.
+# rc=2 는 계기 오류(HARNESS-ERROR)라 rc=1 과 같이 fail 로 접는다 — «못 쟀다» 는 «통과» 가 아니다.
+if [ ! -f templates/temper_check.sh ]; then
+  echo "FAIL  templates/temper_check.sh is in package.json files[] but absent — a deleted subject, not a skip"
+  fail=1
+elif [ -f scripts/test_temper_check_lanes.sh ]; then
+  if ! bash scripts/test_temper_check_lanes.sh; then
+    fail=1
+  fi
+else
+  echo "FAIL  test_temper_check_lanes.sh: temper_check.sh present but its anchor is missing"
   fail=1
 fi
 
@@ -1491,6 +1785,96 @@ elif [ -f scripts/test_node_check_lanes.sh ]; then
   fi
 else
   echo "FAIL  test_node_check_lanes.sh: fh_node_check.sh present but its anchor is missing"
+  fail=1
+fi
+
+# The codex-doctor root gate. Its subject is a SHIPPED npm binary (package.json files[]), and the
+# lane exists because that binary refused every non-npm consumer: it gated on a package.json it
+# never reads, so a consumer harness holding every surface the doctor actually audits — AGENTS.md,
+# plugins/, SKILL.md — got exit 11 instead of a report. The lanes pin both directions at once:
+# the non-npm root now audits, and an empty plugins/ still fails closed rather than printing a
+# confident "Skills scanned: 0". Same pairing rule as above — the lane exists only because the
+# binary does, so its absence beside a present subject is a FAIL, not a skip.
+if [ ! -f bin/fh-codex-doctor.js ]; then
+  _absent_subject_verdict "test_codex_doctor_root_lanes.sh" "bin/fh-codex-doctor.js" || fail=1
+elif [ -f scripts/test_codex_doctor_root_lanes.sh ]; then
+  if ! bash scripts/test_codex_doctor_root_lanes.sh; then
+    fail=1
+  fi
+else
+  echo "FAIL  test_codex_doctor_root_lanes.sh: fh-codex-doctor.js present but its anchor is missing"
+  fail=1
+fi
+
+# Claim propagation — the scanner that catches a RETRACTED NUMBER surviving in another file after the
+# canon withdrew it. halffix_propagation_scan.sh cannot: its token rule needs a letter-start ≥10-char
+# identifier or a path, so «2.7 %» / «다섯 팔» are structurally invisible to it (measured 2026-09-17:
+# a withdrawn five-arm figure sat in CLAUDE.md twice after the canon retracted it, and the scanner's
+# output did not list CLAUDE.md at all). Numeric-retraction only, advisory (rc=2 = LIVE), never a
+# commit gate — prose-claim retractions are OUT OF SCOPE by measurement (0/8 precision). Same pairing
+# rule: the lane exists only because the scanner does, so its absence beside a present subject is a
+# FAIL, not a skip.
+if [ ! -f scripts/claim_propagation_scan.py ]; then
+  _absent_subject_verdict "test_claim_propagation_lanes.sh" "scripts/claim_propagation_scan.py" || fail=1
+elif [ -f scripts/test_claim_propagation_lanes.sh ]; then
+  if ! bash scripts/test_claim_propagation_lanes.sh; then
+    fail=1
+  fi
+else
+  echo "FAIL  test_claim_propagation_lanes.sh: claim_propagation_scan.py present but its anchor is missing"
+  fail=1
+fi
+
+# Stale-reference lanes — «this value is alive and resolves, but the world it points at moved».
+# Added 2026-09-20 after CITATION.cff and four paper versions were found citing the SUPERSEDED v1.0
+# record of this very work: every «does this DOI resolve» check passed, because the DOI does resolve.
+# 🟥 The suite exists because `new-code-anchor` caught the scanner shipping with no lane that RUNS
+# it — the author's own commit said «배선 안 함» and the gate turned that sentence red. A tool's own
+# `--self-check` is not an anchor until a runner surface executes it. Same pairing rule as above:
+# the lane exists only because the scanner does, so its absence beside a present subject is a FAIL.
+if [ ! -f scripts/stale_ref_scan.py ]; then
+  _absent_subject_verdict "test_stale_ref_scan_lanes.sh" "scripts/stale_ref_scan.py" || fail=1
+elif [ -f scripts/test_stale_ref_scan_lanes.sh ]; then
+  if ! bash scripts/test_stale_ref_scan_lanes.sh; then
+    fail=1
+  fi
+else
+  echo "FAIL  test_stale_ref_scan_lanes.sh: stale_ref_scan.py present but its anchor is missing"
+  fail=1
+fi
+
+# Paper-integrity lanes — the three checks the governor ran BY HAND with ad-hoc python on 2026-09-17
+# (paper 2; the sister paper had just been rejected by arXiv for 11/17 reference mismatches): every
+# cited key defined and every defined key cited (+ NEAR-MISS pairing for [MF24]↔[MF22]-style
+# renumbering), no number dropped or invented by a shrink pass, every §N / Sec. N / 섹션 N / 부록 N
+# cross-reference resolving to a heading. One suite for three subjects; the pairing key is
+# citation_key_check.py and the suite itself asserts numeric_token_diff.py and section_ref_check.py
+# exist (L1, FAIL not skip). Same pairing rule as above: the lane exists only because the scanner
+# does, so its absence beside a present subject is a FAIL, not a skip.
+if [ ! -f scripts/citation_key_check.py ]; then
+  _absent_subject_verdict "test_paper_integrity_lanes.sh" "scripts/citation_key_check.py" || fail=1
+elif [ -f scripts/test_paper_integrity_lanes.sh ]; then
+  if ! bash scripts/test_paper_integrity_lanes.sh; then
+    fail=1
+  fi
+else
+  echo "FAIL  test_paper_integrity_lanes.sh: citation_key_check.py present but its anchor is missing"
+  fail=1
+fi
+
+# session_checklist.py — the «request checklist close report» (2026-09-18): every operator utterance of a
+# session (raw transcript + the compaction summaries, two channels) gets a row with an achievement status,
+# reason and carry-over proposal, so a human can review the session like a TC report. `check` is FORM only
+# (closed status enum · non-empty reason/proposal · evidence on DONE) — it never judges whether a status is
+# true. Same pairing rule as above: the lane exists only because the subject does.
+if [ ! -f scripts/session_checklist.py ]; then
+  _absent_subject_verdict "test_session_checklist_lanes.sh" "scripts/session_checklist.py" || fail=1
+elif [ -f scripts/test_session_checklist_lanes.sh ]; then
+  if ! bash scripts/test_session_checklist_lanes.sh; then
+    fail=1
+  fi
+else
+  echo "FAIL  test_session_checklist_lanes.sh: session_checklist.py present but its anchor is missing"
   fail=1
 fi
 
@@ -1860,6 +2244,41 @@ elif _ships_per_files "scripts/test_lane_runner_lanes.sh"; then
   fail=1
 fi
 
+# test_outbound_pr_gate_lanes.sh — 발신 전 3프로브의 앵커. 출하물이므로 파일이 있으면 무조건 돈다.
+# 🟥 배선을 같은 변경에서 한다: 실측 — 비소유 레포 outbound 9건 중 기술 결함 지적 3건이 전부 같은
+# 형태(우리 가드·테스트가 «대상의 모형» 위에서 돌았고 메인테이너의 증거는 우리가 한 번도 안 돌린
+# 실행)였고, 규칙은 CLAUDE.md 에 이미 있었으나 배선이 없었다. 산문으로 둔 채 올리면 그 1/15 를 반복한다.
+if [ -f scripts/test_outbound_pr_gate_lanes.sh ]; then
+  if _out=$(bash scripts/test_outbound_pr_gate_lanes.sh 2>&1); then
+    echo "PASS  test_outbound_pr_gate_lanes.sh (trigger scoping · standpoint rung · enum class-closing · revert probe)"
+  else
+    echo "FAIL  test_outbound_pr_gate_lanes.sh: the outbound-PR gate's verdicts have drifted"
+    _show_failure "$_out"
+    fail=1
+  fi
+elif _ships_per_files "scripts/test_outbound_pr_gate_lanes.sh"; then
+  echo "FAIL  test_outbound_pr_gate_lanes.sh is DECLARED SHIPPED but absent — deletion or broken install"
+  fail=1
+fi
+
+# test_publish_verify_poll_lanes.sh — 발행 «확인» 예산의 앵커. 주체가 ACCEPTED_ABSENT(이 레포의
+# 릴리스 파이프라인 부품, 소비자 호출부 없음)이므로 소비자 install 에서는 파일이 없고 SKIP 이다.
+# 🟥 SKIP 은 PASS 가 아니다 — 이 레포에서 실제로 도는 것이 이 배선의 유일한 검증면이다.
+# 무엇을 지키나: 「전파 지연」과 「발행 실패」가 같은 종료코드로 접히지 않는 것. 접혔던 실측이
+# v3.12.0 이고, 그 빨강이 v3.2.0·v3.4.0 에서 손 발행을 훈련시켜 OIDC 경로를 깨뜨렸다.
+if [ -f scripts/test_publish_verify_poll_lanes.sh ]; then
+  if _out=$(bash scripts/test_publish_verify_poll_lanes.sh 2>&1); then
+    echo "PASS  test_publish_verify_poll_lanes.sh (not_yet_visible != failure · instrument-error stays distinct · calibration)"
+  else
+    echo "FAIL  test_publish_verify_poll_lanes.sh: propagation-lag and publish-failure have been conflated again"
+    _show_failure "$_out"
+    fail=1
+  fi
+elif _ships_per_files "scripts/test_publish_verify_poll_lanes.sh"; then
+  echo "FAIL  test_publish_verify_poll_lanes.sh is DECLARED SHIPPED but absent — deletion or broken install"
+  fail=1
+fi
+
 # sync_from_be_lanes.sh — the RETURN path's anchor. Wired in the same change that ships it: the
 # script had an operator-side caller (a SessionStart hook outside this repo) while its 70 lanes had
 # NO caller anywhere, which is the shape this repo keeps re-finding — a transport that writes into
@@ -2004,6 +2423,66 @@ REFS
   fi
 else
   echo "SKIP  ref-path (package mode: no .git at package root — source-tree-only check)"
+fi
+
+# ── .claude/rules 아래 dotfile 은 tracked 이거나 ignored 여야 한다 (둘 다 아님 = 유출 상태) ──
+#   그 자리의 dotfile 은 «리터럴은 gitignored 소스에만» 규약을 쓰는 운영자-사설 파일들이다
+#   (.public-surface-patterns · .residency-patterns · .owned-owners). 🟥 **같은 누락이 두 번 났다**:
+#   .residency-patterns 가 2026-08-09 스윕에서 발견됐고(.gitignore:23-26 이 그 경위를 적고 있다),
+#   .owned-owners 가 2026-09-21 에 같은 모양으로 또 빠졌다. untracked 는 ignored 가 아니라서
+#   누가 `git add -A` 하면 공개 레포로 그대로 간다. 이름을 하나씩 세는 대신 **자리**를 검사한다 —
+#   다음 형제는 추가되는 순간 여기서 잡힌다.
+#   🟥 판별식은 «ignored 인가»가 아니라 **«tracked 도 ignored 도 아닌가»** 다. 같은 자리의
+#   `.public-surface-patterns.defaults` · `.residency-patterns.defaults` 는 **일부러 tracked**
+#   이고 package.json files[] 로 출하된다(소비자가 받는 기본 패턴). 초판은 «전부 ignored» 로
+#   썼고 깨끗한 트리에서 그 둘에 FAIL 을 냈다 — 과차단은 override 를 훈련시키므로 결함이다.
+#   남는 한 칸 «tracked 도 ignored 도 아님» 이 정확히 유출 상태다.
+if [ -e .git ]; then
+  # 🟥 «디렉터리가 없다»와 «있는데 비었다»를 한 칸으로 접지 않는다 — find 는 둘 다 빈 출력이다.
+  #    앞은 계기 오류(이 검사가 겨눌 자리가 없다), 뒤는 소비자 설치의 정상 상태다.
+  if [ ! -d .claude/rules ]; then
+    echo "SKIP  rules-dotfile: .claude/rules 디렉터리 자체가 없다 — 측정 불가(깨끗함 아님)"
+    _rules_dot=""
+  else
+    _rules_dot=$(find .claude/rules -maxdepth 1 -type f -name '.*' 2>/dev/null | sed 's#^\./##')
+  fi
+  if [ ! -d .claude/rules ]; then
+    :
+  elif [ -z "$_rules_dot" ]; then
+    echo "SKIP  rules-dotfile: .claude/rules 에 dotfile 이 없다 (소비자 설치의 정상 상태)"
+  else
+    # 알려진 음성 — 이 검사가 «무엇이든 ignored 라고 말하는» 계기가 아님을 보인다.
+    if git check-ignore -q ".claude/rules/__selfcheck_probe_not_ignored" 2>/dev/null; then
+      echo "FAIL  rules-dotfile: INSTRUMENT ERROR — 존재하지 않는 비-dotfile 도 ignored 라고 한다"
+      fail=1
+    else
+      while IFS= read -r p; do
+        [ -z "$p" ] && continue
+        if git check-ignore -q "$p" 2>/dev/null; then
+          echo "PASS  rules-dotfile (ignored): $p"
+        elif git ls-files --error-unmatch "$p" >/dev/null 2>&1; then
+          # 🟥 «tracked 면 통과»로 두면 사고가 자기를 사면한다 — .owned-owners 가 실수로 한 번
+          #    커밋되는 순간 이 레인이 영구히 초록이 된다. 그래서 tracked 가 정당한 경우를
+          #    **이름으로** 좁힌다: 출하되는 기본값은 `.defaults` 로 끝난다(package.json files[]).
+          case "$p" in
+            *.defaults) echo "PASS  rules-dotfile (tracked — shipped defaults): $p" ;;
+            *) echo "FAIL  rules-dotfile: $p — tracked 인데 \`.defaults\` 가 아니다. 운영자-사설"
+               echo "      파일이 커밋된 상태일 수 있다. 의도한 출하면 이름을 .defaults 로, 아니면"
+               echo "      \`git rm --cached\` 후 .gitignore 에 줄을 추가해라"
+               fail=1 ;;
+          esac
+        else
+          echo "FAIL  rules-dotfile: $p — tracked 도 ignored 도 아니다. \`git add -A\` 한 번이면"
+          echo "      공개 레포로 간다. 출하할 기본값이면 커밋하고, 운영자-사설이면 .gitignore 에 줄을 추가해라"
+          fail=1
+        fi
+      done <<RULESDOT
+$_rules_dot
+RULESDOT
+    fi
+  fi
+else
+  echo "SKIP  rules-dotfile (package mode: .git 없음 — 소스 트리 전용 검사)"
 fi
 
 if [ "$fail" -ne 0 ]; then

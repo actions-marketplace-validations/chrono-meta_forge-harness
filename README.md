@@ -101,7 +101,7 @@ cd ~/projects/forge-harness && claude        # then type a greeting: hi · 안�
 - You stop having to pick the check. The harness reads what you are about to do — publish, delete,
   rewrite history, open a PR — and names the gate for that moment. ① is one command you remember; ②
   is the layer that remembers for you.
-- **41 skills · 8 agents** you can call in plain language: diagnose a project, accelerate one, wire a
+- **41 skills · 14 agents** you can call in plain language: diagnose a project, accelerate one, wire a
   new one up.
 - `tracks/` keeps what each session learned, so **session 2 starts where session 1 stopped**. This is
   the part that compounds — and the part you cannot judge on day one.
@@ -382,7 +382,7 @@ sidecar posture: [`docs/MODEL_SETUP.md`](docs/MODEL_SETUP.md).
 
 ---
 
-## 41 skills · 8 agents
+## 41 skills · 14 agents
 
 Count = non-deprecated skills. Clustered as verification · orchestration · diagnosis · harvesting ·
 gates · discovery · simulation · setup, plus 8 agents (`challenger` · `quench-challenger` · `beginner`
@@ -415,9 +415,9 @@ and the phrase that triggers it:
 | [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md) | How to contribute skills and patterns |
 | [`tracks/_contrib/`](tracks/_contrib/README.md) | **Consent lane** — share a de-identified work session; the repo compounds across operators |
 
-> **FH papers**: v1.0.1 methodology · [Zenodo](https://zenodo.org/records/22542168) (DOI
-> 10.5281/zenodo.22542168) · cs.SE companion v1.2.1, preprint ·
-> [Zenodo](https://zenodo.org/records/22635721) (DOI 10.5281/zenodo.22635721) ·
-> [arXiv:2609.04218](https://arxiv.org/abs/2609.04218) (arXiv shows v1 as of 2026-09-07) · cs.AI companion in
+> **FH papers**: v1.0.2 methodology · [Zenodo](https://zenodo.org/records/22843702) (DOI
+> 10.5281/zenodo.22843702) · cs.SE companion v1.2.2, preprint ·
+> [Zenodo](https://zenodo.org/records/22674575) (DOI 10.5281/zenodo.22674575) ·
+> [arXiv:2609.04218](https://arxiv.org/abs/2609.04218) (v2 announced 2026-09-09 — adds Sec. 6.7 and downgrades the title's claim; Zenodo v1.2.2 was published the same day with the same content, so the two deposits agree) · cs.AI companion in
 > preparation. Those, the independent convergent work, and the caveats on each:
 > [`docs/OUTPUT_EVIDENCE.md`](docs/OUTPUT_EVIDENCE.md).

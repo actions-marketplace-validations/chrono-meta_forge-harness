@@ -93,6 +93,12 @@ it?) before acting — mechanical anchor over agreement.
 2. **Cross-family adversarial review** — `auto-decorrelation` recruits ≥1 different-family auditor
    (e.g. `codex` gpt-5.5 / high for repo-grounded verdict code). The same standing verifier the
    4-axis gate uses for load-bearing FH assets, now applied to **field** load-bearing changes.
+   🟥 **Judgment-type questions need reps ≥ 3** (pmh-dev #76, 2026-09-11): the same «is this silent
+   fallback by-design or fail-open?» prompt at the same temperature returned DESIGN / DEFECT / DESIGN
+   across three runs of one auditor. A single run of a judgment question therefore cannot be recorded
+   as `panel(...)` CONCUR — run it ≥3×, report the split, and treat a split as *unresolved*, not as
+   whichever side came first. Fact-type questions (grep, existence, «does line N call X») are stable
+   across reps and families and need neither repetition nor a family change.
 3. **Confirm → fix → re-verify loop** — iterate until the cross-family pass is **CONVERGED**: no
    reachable false-PASS / false-CONFIRMED / masked-FAIL / crash-where-safe-fail-required. **Each fix
    ships a mechanical regression test** reproducing the closed hole — a *required* convergence
@@ -126,6 +132,34 @@ boolean-return gate helpers, config-driven allow/deny, and shell/CI irreversible
 the grep — an agent under merge pressure can under-trigger by treating a change as non-load-bearing.
 That residual is the reason the gate is reinforced by the always-on Autonomous-Initiative trigger
 row + the operator's proactive framing, not by the grep alone.
+
+**Registration is not a precondition (operator decision 2026-09-08).** «Field surface» above was
+read as «a mapped project's surface», and a session handed an unmapped gate file answered *"적용
+대상이 아닙니다"* and reviewed it bare — 0 degrade scan, 0 cross-family — missing a GHSA-grade
+network-exposure defect. The blind spot this gate guards is a property of the *reviewer's family*,
+not of the file's owner, so ownership cannot switch it off. Scope, narrowed so it does not become
+«every review is a gate»: ⓐ the ask is a **merge / landing verdict** (not an explanation or a style
+question) · ⓑ the file is **gate-shaped by `scripts/gate_shape_scan.sh`** — a closed, word-bounded
+verdict-identifier list (allow/deny/permit/approve·approval/verdict/permission/auth family incl.
+authorize·authorization·authenticat*; `author`/`allowance` excluded), a bind/listen exposure, or an
+irreversible-op call; comment-led lines skipped (`* ` and `-- ` only when followed by space, so
+`*allow = 1` and a continued `--force` line are code); binary → `UNSCANNABLE`, and exit 3 dominates
+any hit (never a silent miss). The classifier is the scope test; it is **not** the FH-owned
+exclusion — that is caller-side (the 4-axis gate already covers FH paths). The task's own naming of the file as gate / auth / exposure
+code is a manual escalation on top of the classifier, not a substitute for it. Known-negative: a
+utility with none of those is out of scope; `reject(` is deliberately not a verdict token (Promise
+API collision, measured — named residual). ⓒ **FH-owned assets are excluded** — they carry the
+4-axis gate; this gate is for field code, and «field» means *not FH*, not *mapped*. **Record surface
+for an unmapped file**: no marker directory exists for it, so the session writes
+`tracks/_meta/field_gate_review_<YYYY-MM-DD>_<slug>.md` — file · verdict · `crossfamily:` verbatim
+from the enum · degrade-scan result · regression test *landed* or *owed* — and the review reply
+links it. An **owed** regression test keeps the verdict `NOT-CONVERGED` until it lands and runs;
+the gate's convergence sub-condition is unchanged. **Pilot evidence (below bar, cue-dependent)**: floor tier,
+blind, one variable — before 0/1 fired · after 2/3 on the first draft, **both with a prompt cue
+«follow your installed review procedure»**; without the cue, **0/51** the same day (17 unmapped
+gate-shaped files × 3). The gate is salience-only and the salience needs a cue — a mechanical
+reminder channel is the open item (`tracks/_meta/fh_signal_2026-09-08_gate-needs-cue.md`). Resident summary: `CLAUDE.md
+§Field-Harness Load-Bearing Change Gate`.
 
 **Residency** — sanitize company code (redact vendor/domain literals) before any external-family
 dispatch; domain data never leaves. **Autonomy** — autonomous once the operator has consented in
@@ -184,6 +218,27 @@ review was grounded against*.
 changes which ground truth the review is checked against — they are orthogonal axes, and a review
 that maxes out the first while leaving the second at zero has not raised its coverage of
 standpoint-dependent defects at all.*
+
+🟢 **External number, 2026-09-12 — and it is large.** `arXiv:2609.10969` (*Engineering Reliable
+Commit Gates for Agentic AI: Cost-Aware Verification Portfolios under Common-Mode Data Failures*,
+2026-09-10, cs.SE) built this comparison as a benchmark: 48 task templates → **2,880 scenarios**,
+**fixed-call 2×2** so budget is held constant and the comparison is about the axis rather than about
+spending more. Result: a **cross-model vote over shared evidence approves 62.9 % of unsafe proposals**,
+versus **22.9 % with an independent source** — source effect **40.9 pp** against **11.3 pp** for model
+diversity, i.e. **3.6×**. 🟥 **Read that against which axis FH mechanizes**: `crossfamily:` is a closed
+enum with a hard commit block and a fixtures lane, while `standpoint:`'s grounds check — the axis the
+number says carries 3.6× the effect — **was advisory by design until 2026-09-12**
+(`validate_standpoint_leg()` printed `⚠️` and did not `return 1` on a `tier2` naming no command).
+🟢 **Both gaps were closed the same day this number landed**: the `tier2`+ grounds check now
+**blocks** (`STANDPOINT_GROUNDS_GRACE_DATE=2026-09-12`, no retro-blocking — lanes N8/N8b/N8c/N8d),
+and `crossfamily:`'s `panel(...)` now requires an **`evidence=SHARED|INDEPENDENT|MIXED`** token in its
+grounds (`EVIDENCE_TOKEN_GRACE_DATE=2026-09-12`, lanes e1–e10), because a cross-family panel reading
+the **same diff** is, in their terms, the 62.9 % arm while recording as this enum's strong value.
+🟥 `SHARED` stays a legal answer — the defect was that it was unsayable, not that it is wrong. Until 2026-09-12 this section rested on FH's own
+n=4+4/4+8 observations; the direction is unchanged and the magnitude is now external.
+⚠️ Scope: their unsafe-approval rates are from their fault-injection benchmark, not from FH's corpus —
+cite the **asymmetry**, not the absolute percentages, as a property of FH's own gate.
+(Numbers re-read off the abstract on 2026-09-12 rather than recalled — §Instrument Calibration.)
 
 **Relationship to the isolation axis — standpoint is isolation whose scope moved up to the
 harness (operator, 2026-08-18).** Operator wording: *"요는 이것도 '격리' 프레이밍이 하네스 단위로
@@ -514,7 +569,7 @@ one variable at a time — `banana(qasp)` → **blocked (enum)** · `tier2` with
 **passes**.
 
 **What is actually true, stated at the right width**: the enum IS closed and enforced; the `tier2`+
-execution grounds are **advisory** (a thin `tier2` records and warns, it does not block); and nothing
+execution grounds **blocked** from 2026-09-12 (before that a thin `tier2` recorded and warned); and nothing
 checks whether the recorded value is *true*. The old sentence collapsed all three into "no validation",
 which suppresses use of a control that exists — the quietest kind of drift, because it reads as
 honest modesty.
@@ -545,7 +600,7 @@ grep the function name, not a line number) blocks on **six** distinct `return 1`
 duplicated one, a value outside the closed enum, a `crossfamily:` token contaminating this axis, a
 bare `not-applicable`, and a bare `DEGRADED_*`/`UNKNOWN`. Lanes: `scripts/test_marker_standpoint_lanes.sh`.
 **What is actually reserved is one narrow slot**: for `tier2`+ the «did you name a command you ran»
-grounds test emits `⚠️` and **does not** return 1 — the hook labels it *"Advisory by design"*. So the
+grounds test emitted `⚠️` and did **not** return 1 until 2026-09-12 (the hook labelled it *"Advisory by design"*); it now returns 1 for markers dated on/after `STANDPOINT_GROUNDS_GRACE_DATE`. So the
 accurate three-way split is: **enum → blocked · non-vacuity of grounds → blocked · truth of the value,
 and execution-naming on `tier2`+ → not checked.** Do not read this as "now mechanized"; read it as
 **"the channel is checked in more places than this file used to admit, and the judgment is still not
@@ -888,7 +943,7 @@ time, because the first version of this correction varied two and mis-attributed
 `banana(qasp)` → blocked (enum) · `tier2` without parens → blocked (enum) · `tier2(qasp)` with **no**
 execution grounds → **passes with a warning** · with grounds → passes. 🟥 So the first fix's claim
 that "grounds are non-empty" are checked **over-shot, and a different-family reviewer caught it**:
-the `tier2`+ execution grounds are **advisory**. Two residuals remain and both are real — grounds are
+the `tier2`+ execution grounds **block as of 2026-09-12** (they were advisory before). Two residuals remain and both are real — grounds are
 not enforced, and whether `tier2` is *true* is still self-attested. What was wrong was only the claim
 that nothing validated the field at all. Three artifacts, one carrying two
 independent trials (forge-harness PR #368, a sibling field harness's PR #8 reps=3 and its

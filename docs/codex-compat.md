@@ -64,7 +64,7 @@ Resolution order:
 
 | Unit type | Lookup |
 |---|---|
-| `--skill name` | `plugins/fh-meta/skills/name/SKILL.md`, then `plugins/fh-commons/skills/name/SKILL.md` |
+| `--skill name` | `plugins/fh-meta/skills/name/SKILL.md`, then `plugins/fh-commons/skills/name/SKILL.md`, then **every other `plugins/*/skills/name/SKILL.md`** (alphabetical). Before 3.5.0 the search stopped after the first two, so skills in `fh-qp` and `fh-preprep` were unreachable by bare name. |
 | `--agent name` | `.claude/agents/name.md`, then `plugins/fh-meta/agents/name.md`, then `plugins/fh-commons/agents/name.md` |
 | `--agent plugin:name` | `plugins/plugin/agents/name.md` first |
 | `--unit path` | explicit file path |
@@ -113,10 +113,34 @@ When `codex exec` runs **inside this repo**, FH's Claude-native git/Stop/PostToo
 M2 skills (`deliberation`, `steel-quench`, `harness-doctor`, `context-doctor`, `sim-conductor`, `harvest-loop`) have a core workflow that runs under Codex, but any step that dispatches `Agent(subagent_type=...)` or a slash command must be replaced by `fh-run` or a direct `codex exec` call reading the sub-agent's `SKILL.md`/agent `.md` — same workflow, different runtime (the "M2 adaptation pattern" in `AGENTS.md`). Example: `steel-quench` Waves 1–3 run; the `quench-challenger` agent step becomes `fh-run --agent fh-commons:quench-challenger`.
 
 ### 3. M3 skills do not run automatically under Codex
-M3 skills (`goal-quench` Phase-3 Stop hook, `hub-cc-pr-reviewer` CC session context, `install-wizard` settings.json write) require Claude-Code-native runtime and are **methodology reference only** under Codex unless a dedicated adapter exists. Use Codex's native goal/session features for goal control, and use `fh-gate` after completion for FH quality gating.
+M3 skills (`goal-quench` Phase-3 Stop hook, `harness-pr-reviewer` CC session context, `install-wizard` settings.json write) require Claude-Code-native runtime and are **methodology reference only** under Codex unless a dedicated adapter exists. Use Codex's native goal/session features for goal control, and use `fh-gate` after completion for FH quality gating.
 
 ### 4. No token accounting
 Codex token usage is billed in the Codex CLI quota and is **not** recorded in any FH session log or orchestrator measurement. Cross-family runs (Gemini/Codex) are invisible to FH's token-budget tooling by construction.
+
+### 6. 🟥 The gate may not be wired in your checkout — and a gate that never ran looks exactly like one that passed
+Every "the hook blocks this" statement in FH's docs is true only where `core.hooksPath` points at
+`templates/.git-hooks`. Git tracks the hook files; it does **not** carry that config value. Measured
+2026-09-21, same commit, two checkouts: **15 layers compared, only the 4 READ layers matched — all 11
+ENFORCE/EVIDENCE/PATTERN layers were opposite.** A third direction is quieter still: with the pattern
+layer absent the confidentiality scan still runs and still goes **green**, while company-name and
+real-name classes are silently `UNSCANNED`.
+
+```bash
+bash scripts/env_layer_fingerprint.sh            # PRESENT/ABSENT/UNMEASURED per layer, no values
+bash scripts/gate_bootstrap_ephemeral.sh --check # rc=1 while anything is missing
+bash scripts/gate_bootstrap_ephemeral.sh --apply # wires hooksPath + a UTF-8 locale
+```
+
+A UTF-8 locale is part of it, not a nicety: under `LC_CTYPE=POSIX` all four non-vacuity legs of an
+honest Korean marker are rejected as "vacuous" — over-blocking, the opposite failure. The third
+requirement is the two gitignored evidence files, and **a human writes those**; the bootstrap script
+deliberately does not create markers, because auto-generating evidence is closing the gate with a
+forgery. ⚠️ `scripts/fh_node_check.sh` cannot warn you here — it travels the same gitignored channel
+as the `settings*.json` it would read, so on an unwired node the detector is absent too.
+
+Canonical: `AGENTS.md` §Mandatory Non-Claude Checklist item **1-b** ·
+`knowledge/shared/harness-core/checkout_layer_drift.md` §8.
 
 ### 5. Cross-family sibling note (Gemini)
 The sibling pattern for Gemini is `gemini -p "$(cat <skill+artifact>)"`. Outside a trusted directory Gemini requires `--skip-trust` (or `GEMINI_CLI_TRUST_WORKSPACE=true`). Gemini's headless output may bracket identifiers (`[ID]:`) where Codex does not — parse tolerantly.
@@ -125,7 +149,7 @@ The sibling pattern for Gemini is `gemini -p "$(cat <skill+artifact>)"`. Outside
 
 | Tier | Under Codex | Action |
 |---|---|---|
-| **M1** | Runs fully (`token-budget-gate`, `asset-placement-gate`, `phantom-quench`, `deep-clarify`, `convergence-loop`, `ko-tech-writer` (visual-QA steps degrade to text-only)) | `cat SKILL.md artifact \| codex exec -m gpt-5.5 -` |
+| **M1** | Runs fully (`token-budget-gate`, `asset-placement-gate`, `phantom-quench`, `deep-clarify`, `convergence-loop`, `ko-tech-writer` (visual-QA degrades to text-only; the spoken register's Step 5-s renders audio through a shell TTS call — available here — but its **listening** pass is human in every runtime, so it degrades to declared-unmet, not to a Codex-specific gap)) | `cat SKILL.md artifact \| codex exec -m gpt-5.5 -` |
 | **M2** | Core runs; agent/slash steps via adapter (`deliberation`, `steel-quench`, `harness-doctor`, `context-doctor`, `sim-conductor`, `harvest-loop`) | Substitute each dispatch with `fh-run` or a direct `codex exec` on the sub-agent's `.md` |
 | **M3** | Does not run automatically | Use native Codex session features where available; otherwise read as methodology reference or use a dedicated adapter |
 

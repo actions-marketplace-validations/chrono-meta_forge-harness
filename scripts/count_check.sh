@@ -89,8 +89,146 @@ count_check() { # count_check <label> <file> <expected-string>
   fi
 }
 count_check "fh-meta plugin.json"      plugins/fh-meta/.claude-plugin/plugin.json    "${meta_sk} skills + ${meta_ag} agents"
-count_check "fh-commons plugin.json"   plugins/fh-commons/.claude-plugin/plugin.json "${com_sk} skills"
+# 🟥 fh-commons 는 skills 절반만 검사하고 있었다 — 그리고 그 사이 agents 가 드리프트했다.
+#    2026-09-19 실측: 디스크 6 skills / **7** agents · plugin.json 선언 "6 skills + **1** agent"
+#    · marketplace.json 선언 "**5** skills … + 1 agent". 셋이 다 어긋났는데 COUNT-CHECK 는
+#    **PASS** 였다 — 단언 문자열이 `"6 skills"` 라 긴 문장 안에서 그대로 걸렸기 때문이다.
+#    즉 «목록=커버리지» 의 (A) 방향: 단언 목록 밖의 수치는 **조용히 통과한다.**
+#    fh-meta 와 같은 «쌍» 으로 올려 두 수치를 한 번에 결박한다.
+count_check "fh-commons plugin.json"   plugins/fh-commons/.claude-plugin/plugin.json "${com_sk} skills + ${com_ag} agents"
 count_check "marketplace.json fh-meta" .claude-plugin/marketplace.json               "${meta_sk} skills + ${meta_ag} agents"
+# 🟥 marketplace.json 은 fh-meta 만 검사하고 있었다 — fh-commons 항목은 어느 단언에도 없었다.
+# 🟥 그리고 **파일 전체 grep 으로는 per-plugin 주장을 못 한다.** 첫 수리에서 실제로 났다:
+#    `"${com_ag} agent"`(=7) 가 같은 파일 안 fh-meta 의 "35 skills + 7 agents" 에 걸려 **PASS**
+#    했다 — 대상 항목은 "1 agent" 인 채로. 장식 앵커였다. 그래서 그 항목만 «잘라내서» 본다.
+mp_desc() { # mp_desc <plugin-name-substring> → 그 항목의 description 만
+  read_tree .claude-plugin/marketplace.json | python3 -c "
+import json,sys
+try: d=json.load(sys.stdin)
+except Exception: sys.exit(3)
+for p in d.get('plugins',[]):
+    if sys.argv[1] in p.get('name',''): print(p.get('description','')); break
+" "$1"
+}
+mp_check() { # mp_check <label> <plugin-substring> <expected>
+  local body esc
+  body=$(mp_desc "$2") || { echo "FAIL  count: $1 — marketplace.json 파싱 불가 (계기 오류, 0 아님)"; fail=1; return; }
+  [ -n "$body" ] || { echo "FAIL  count: $1 — marketplace.json 에 '$2' 항목이 없다 (부재≠통과)"; fail=1; return; }
+  esc=$(printf '%s' "$3" | sed 's/[][\.*^$+?(){}|\\/]/\\&/g')
+  if printf '%s' "$body" | grep -qE "(^|[^0-9])${esc}([^0-9]|\$)"; then echo "PASS  count: $1"
+  else echo "FAIL  count: $1 — expected \"$3\" in the fh-commons marketplace entry"; fail=1; fi
+}
+mp_check "marketplace.json fh-commons skills" fh-commons "${com_sk} skills"
+
+# ══════════════════════════════════════════════════════════════════════════════
+# 🟥 **전수 커버리지 — 2026-09-20 신설. 그리고 이 절은 «정정»이다.**
+#
+#   3.14.0 CHANGELOG 가 «count_check.sh 가 플러그인 전수를 본다» 고 적고 npm 에 나갔는데
+#   **거짓이었다.** #763 이 한 것은 `fh-commons` 단언을 조인 것(agents 추가 · marketplace
+#   per-plugin 스코핑)이지 전수 순회가 아니다 — `fh-preprep` · `fh-qp` 는 **안 세고 있었다.**
+#   커밋 본문의 «문제 서술»을 «수리»로 읽어서 옮긴 형태다.
+#
+#   🟥 그리고 그 사각에서 실물이 나왔다: `fh-preprep` 은 plugin.json description 에
+#   **개수 선언이 아예 없다.** 선언이 없으면 대조할 것이 없고, 그건 통과가 아니라 **미측정**이다.
+#
+#   ⇒ 이름을 손으로 적지 않는다. `plugins/*/` 를 **디스크에서 열거**한다.
+# ══════════════════════════════════════════════════════════════════════════════
+# 🟥 **모호≠통과 — 2026-09-21 신설. #768 이 「안 닫은 것」으로 남긴 자리다.**
+#
+#   그 PR 은 순회를 전수로 넓히면서 «순회는 description 의 **첫** `N skills` 패턴만 읽는다 —
+#   과탐/미탐 방향 미측정» 이라고 스스로 적었다. 재현했다(디스크 4, 선언 3):
+#
+#     CONTROL  "3 skills", 산문에 숫자 없음                → FAIL  선언 3 ≠ 디스크 4
+#     ARM      "roughly 4 skills worth of … 3 skills"     → PASS  sweep: fh-qp skills (4)
+#
+#   **같은 결함이 초록이 된다.** 첫 매치가 산문 숫자라 낡은 선언을 아예 안 본다 —
+#   #763·#768 이 두 번 당한 부분문자열 충돌과 같은 클래스이고, 방향이 **거짓 PASS** 라 더 나쁘다.
+#
+#   ⇒ 첫 매치를 고르지 않는다. **전부 세고, 값이 갈리면 FAIL.** 「어느 쪽이 선언인가」를
+#     모르는 상태는 통과가 아니라 미측정이다 — #768 의 「부재≠통과」와 같은 판단, 한 칸 옆.
+#     같은 값이 여러 번 나오는 것은 모호가 아니므로 통과시킨다(과차단은 override 를 학습시킨다).
+_DECL_PY='
+import json,re,sys
+mode=sys.argv[1]; raw=sys.stdin.read()
+if mode=="json":
+    try: d=json.loads(raw)
+    except Exception: print("PARSE-ERROR"); raise SystemExit
+    t=d.get("description","") or ""
+else:
+    t=raw
+def one(noun):
+    # 🟥 앞이 영숫자면 선언이 아니다 — `M3 skill tier map` 의 "3 skill" 이 실물에서 걸렸다.
+    #    이것이 #768 이 「미측정」이라 적은 **과탐** 방향이고, 측정해보니 출하 트리에 1건 있었다.
+    vals=[m.group(1) for m in re.finditer(r"(?<![A-Za-z0-9_/.-])(\d+)\s+%s?" % noun, t)]
+    if not vals: return "NONE"
+    uniq=sorted(set(vals), key=int)
+    return uniq[0] if len(uniq)==1 else "AMBIG:" + "/".join(uniq)
+print("%s %s" % (one("skills"), one("agents")))
+'
+
+sweep_plugin() { # sweep_plugin <dir-name>
+  local pn="$1" pj="plugins/$1/.claude-plugin/plugin.json" d_sk d_ag dec
+  d_sk=$(count_active "$pn"); d_ag=$(count_agents "$pn")
+  [ -f "$pj" ] && dec=$(read_tree "$pj" | python3 -c "$_DECL_PY" json) || dec="READ-ERROR"
+  case "$dec" in
+    PARSE-ERROR|READ-ERROR|"")
+      echo "FAIL  sweep: $pn — plugin.json 을 못 읽었다 ($dec) — 계기 오류지 통과가 아니다"; fail=1; return;;
+  esac
+  local dsk dag; dsk=${dec%% *}; dag=${dec##* }
+  # skills — 🟥 선언 부재는 통과가 아니다 · 🟥 선언 모호도 통과가 아니다
+  if [ "$dsk" = "NONE" ]; then
+    echo "FAIL  sweep: $pn skills — description 에 개수 선언이 없다 (디스크 ${d_sk}). 부재≠통과"; fail=1
+  elif [ "${dsk#AMBIG:}" != "$dsk" ]; then
+    echo "FAIL  sweep: $pn skills — description 이 개수를 여럿 말한다 (${dsk#AMBIG:} · 디스크 ${d_sk}). 모호≠통과"; fail=1
+  elif [ "$dsk" = "$d_sk" ]; then echo "PASS  sweep: $pn skills (${d_sk})"
+  else echo "FAIL  sweep: $pn skills — 선언 ${dsk} ≠ 디스크 ${d_sk}"; fail=1; fi
+  # agents — 디스크에 0 이면 선언 부재가 정상이다(적을 것이 없다). 0 이 아닌데 없으면 결함
+  # 🟥 모호는 디스크 개수와 무관하게 먼저 걸린다 — 「0 이라 선언이 없어도 된다」가
+  #    「0 이라 선언이 갈려도 된다」로 새면 안 된다.
+  if [ "${dag#AMBIG:}" != "$dag" ]; then
+    echo "FAIL  sweep: $pn agents — description 이 개수를 여럿 말한다 (${dag#AMBIG:} · 디스크 ${d_ag}). 모호≠통과"; fail=1
+  elif [ "$d_ag" -eq 0 ]; then
+    if [ "$dag" = "NONE" ] || [ "$dag" = "0" ]; then echo "PASS  sweep: $pn agents (0, 선언 없음이 정합)"
+    else echo "FAIL  sweep: $pn agents — 선언 ${dag} 인데 디스크 0"; fail=1; fi
+  elif [ "$dag" = "NONE" ]; then
+    echo "FAIL  sweep: $pn agents — 디스크 ${d_ag} 인데 선언이 없다. 부재≠통과"; fail=1
+  elif [ "$dag" = "$d_ag" ]; then echo "PASS  sweep: $pn agents (${d_ag})"
+  else echo "FAIL  sweep: $pn agents — 선언 ${dag} ≠ 디스크 ${d_ag}"; fail=1; fi
+  # 🟥 **marketplace.json 도 같은 순회에 태운다.** 여기서 멈추면 plugin.json 만 전수 보고
+  #    marketplace 는 4중 2로 남아, 이 절이 고치려는 바로 그 반쪽-픽스를 재현한다.
+  local mb msk mag
+  mb=$(mp_desc "$pn")
+  if [ -z "$mb" ]; then
+    echo "FAIL  sweep: $pn marketplace — 항목이 없다 (부재≠통과)"; fail=1; return
+  fi
+  # 🟥 marketplace 도 같은 파서를 쓴다 — 한쪽만 고치면 이 절이 고치려는 반쪽-픽스 그대로다.
+  local mout; mout=$(printf '%s' "$mb" | python3 -c "$_DECL_PY" text); msk=${mout%% *}
+  if [ "$msk" = "NONE" ]; then
+    echo "FAIL  sweep: $pn marketplace skills — 개수 선언이 없다 (디스크 ${d_sk}). 부재≠통과"; fail=1
+  elif [ "${msk#AMBIG:}" != "$msk" ]; then
+    echo "FAIL  sweep: $pn marketplace skills — 개수를 여럿 말한다 (${msk#AMBIG:} · 디스크 ${d_sk}). 모호≠통과"; fail=1
+  elif [ "$msk" = "$d_sk" ]; then echo "PASS  sweep: $pn marketplace skills (${d_sk})"
+  else echo "FAIL  sweep: $pn marketplace skills — 선언 ${msk} ≠ 디스크 ${d_sk}"; fail=1; fi
+}
+
+sweep_n=0
+for _d in plugins/*/; do
+  # 🟥 글롭이 하나도 안 맞으면 **리터럴 `plugins/*/` 자체**가 루프에 들어온다.
+  #    아래 plugin.json 검사가 결국 걸러내고 sweep_n 하한 가드가 FAIL 을 내지만, 그건
+  #    **간접 방어**다 — 실패 원인이 「글롭이 죽었다」가 아니라 「플러그인이 없다」로 읽힌다.
+  [ -d "$_d" ] || continue
+  _n=$(basename "$_d")
+  [ -f "plugins/$_n/.claude-plugin/plugin.json" ] || continue
+  sweep_plugin "$_n"; sweep_n=$((sweep_n + 1))
+done
+# 🟥 **죽은 컨트롤 방어** — 열거가 0 이면 「전부 통과」와 「아무것도 안 봤다」가 같은 침묵이다
+if [ "$sweep_n" -lt 2 ]; then
+  echo "FAIL  sweep: 플러그인을 ${sweep_n}개만 열거했다 — 글롭이 죽었다(계기 오류, 0 아님)"; fail=1
+else
+  echo "PASS  sweep: 플러그인 ${sweep_n}개를 디스크에서 열거했다 (이름 손적기 0)"
+fi
+
+mp_check "marketplace.json fh-commons agents" fh-commons "${com_ag} agent"
 # ── README 렌더링만 per-repo override 를 받는다 ──────────────────────────────────────────────
 # 왜 이 한 줄만 다른가: plugin.json·marketplace.json 의 문자열은 **기계 결합**(영문 고정,
 # 소비처가 파싱한다)이지만 README 헤더는 **사람이 읽는 산문**이라 하류 하네스가 자기 언어로 쓴다.

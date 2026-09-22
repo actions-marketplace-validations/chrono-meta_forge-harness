@@ -39,6 +39,24 @@ cd "$REPO_ROOT" || exit 1
 #   scripts/sync_to_be_lanes.sh             — forward-path lane suite for sync-to-be.sh, itself
 #       ACCEPTED_ABSENT above; added 2026-08-14, pmh-dev#69.
 ACCEPTED_ABSENT=(
+  # 🟥 2026-09-21 (야간) — 정책렌즈 채점기와 그 레인. **FH 자기 연구의 실험 기록**이지 소비자
+  #    능력이 아니다: 판정 대상이 `scripts/fixtures/policy_lens_knownpair_2026-09-21/` 안의
+  #    1차 런 48개 파일(236K)이고, 그것까지 실어 보내면 아무도 안 쓰는 실험 아카이브가 패키지
+  #    무게가 된다. 🟥 **조용한 통과가 아니다** — `selfcheck.sh` 의 이 블록은 `_absent_subject_verdict`
+  #    를 거치므로, 소비자 트리에서는 「files[] 에 없고 부재」→ **SKIP 으로 이름이 찍히고**,
+  #    반대로 출하 선언이 생겼는데 파일이 없으면 FAIL 로 뒤집힌다.
+  #    이걸 «수치 도구» 로 일반화해 출하할 거면 픽스처를 일반 코퍼스로 바꾸는 것이 먼저다.
+  "scripts/score_policy_lens.sh"
+  "scripts/test_policy_lens_scorer_lanes.sh"
+  # 🟥 2026-09-21 — 지도 «깜빡임» 렌더 프로브 4종. 이 넷의 **판정 대상이 `docs/map/*.html`**
+  #    인데 그 지도는 files[] 에 없다(발행은 GitHub Pages 로 하고 npm 으로는 안 나간다). 소비자
+  #    트리에는 잴 것이 아예 없으므로 계기를 실어 보내는 것은 무게만 늘린다. 레인 자신이 그
+  #    상태를 `NOT MEASURED` 로 크게 적고 rc=0 으로 끝나므로 조용한 통과도 아니다.
+  #    지도가 언젠가 출하되면 이 세 줄을 지우고 files[] 로 옮겨라 — 순서가 반대면 안 된다.
+  "scripts/map_flash_render_probe.js"
+  "scripts/png_luma.py"
+  "scripts/test_map_flash_render_lanes.sh"
+  "scripts/test_png_luma_lanes.sh"
   # 🟥 2026-09-05 — outbound 가드와 그 레인은 **이 목록에서 나갔다(= 이제 출하한다).**
   # 종전 사유는 «override 층이 없으면 fail-closed 라 신선 설치를 100% 차단한다» 였는데,
   # 그 문장은 **두 가지를 뭉쳤다**: 가드가 fail-closed 인 것은 맞지만 **신선 설치에서 그 가드를
@@ -95,6 +113,18 @@ ACCEPTED_ABSENT=(
   # ⚠️ **남은 갭을 이름으로**: 소비자는 자기 install 의 soul 다리를 검증할 레인을 못 받는다.
   #    `test_hook_leg_wiring_lanes.sh` 는 원리상 등록부 없이도 돌 수 있어야 하고(호출부만 보므로),
   #    그렇게 고치면 이 목록에서 빼는 것이 맞다. 오늘은 안 고쳤다 — 미측정이 아니라 미착수다.
+  # 🟥 pipefail 클래스 스캐너 + 그 레인 — **일부러 출하하지 않는다.**
+  #    ⓐ 레인 L12c 가 `changed` 모드를 돌리는데 그건 **git 레포 + `origin/main` 기준선**을
+  #      요구한다. 소비자 install(추출된 tarball·git 아님)에서는 계기 오류로 죽고, 그건
+  #      신선 설치의 selfcheck 를 막는 형태다 — `sim_isolated_run.sh` 를 안 싣는 것과 같은 이유다.
+  #    ⓑ 스캐너의 «레포 부채 113 곳» 기준선은 **이 레포의 사실**이지 소비자의 사실이 아니다.
+  #      남의 레포 숫자를 우리 기준으로 렌더하면 그건 판정이 아니라 오표기다.
+  #    ⓒ selfcheck 쪽 배선은 `_absent_subject_verdict` 를 타므로, 미출하 + 부재 = **SKIP**(통과)다.
+  #      즉 소비자는 이 레그를 조용히 건너뛰고, 이 레포에서는 실제로 돈다.
+  #    ⚠️ 남은 갭을 이름으로: 그 SKIP 규약 때문에 **이 레포에서 스캐너를 지워도 selfcheck 가
+  #      안 짖는다**(미출하 subject 공통 한계). 삭제를 잡는 것은 `lane_runner_check.sh` 쪽이다.
+  "scripts/pipefail_earlyexit_scan.sh"
+  "scripts/test_pipefail_class_lock_lanes.sh"
   "scripts/test_marker_soul_tenet_lanes.sh"
   "scripts/test_hook_leg_wiring_lanes.sh"
   "scripts/soul_trace.sh"
@@ -135,6 +165,10 @@ ACCEPTED_ABSENT=(
   # sibling directly above: it exercises scripts/sync-to-be.sh, itself ACCEPTED_ABSENT — a lane
   # suite for a script that never ships has nothing to verify on a consumer's machine either.
   "scripts/sync_to_be_lanes.sh"
+  # 2026-09-21 — 그 포워드 레인의 «형태» 앵커(pipefail × 조기종료 소비자 × 64 KiB 파이프 버퍼).
+  # 판정 대상이 scripts/sync_to_be_lanes.sh 이고 그 자신이 바로 위에서 ACCEPTED_ABSENT 다.
+  # 안 나가는 레인의 앵커를 소비자 트리에 실어 보내면 잴 것이 없는 검사를 하나 더 주는 셈이다.
+  "scripts/test_pipefail_sigpipe_lanes.sh"
   # NOTE (2026-08-29): `scripts/fh_hub_identity.sh` USED to sit here, with a comment saying it had
   # been removed from files[] on 2026-08-15 as a confidentiality misclassification. Both halves are
   # now stale: #484 deliberately put it BACK in files[] (without it, `fh_session_load.sh`'s hub-
@@ -197,6 +231,23 @@ ACCEPTED_ABSENT=(
   #       아니다. 여기 등재하는 이유도 같다: files[] 추가는 소비자-대면 변경이라 false-FAIL 이
   #       없음을 tarball 모드로 따로 증명해야 하는데, 이 델타는 **배선 델타**다. 카드로 이월.
   "scripts/test_prepush_destructive_liveness.sh"
+  #     ⓐ-2 test_liveness_echo_token_lanes.sh — ⓐ 의 **앵커**다. 주체가 위에서 «일부러 안 싣는»
+  #       파일이므로, 소비자 머신에는 이 레인이 잴 대상이 아예 없다. 실어봐야 매 실행 SKIP 이고,
+  #       그 SKIP 은 「부재」와 「건강함」을 또 같은 글자로 만든다 — 이 레인이 존재하는 이유가
+  #       바로 그 부류의 충돌이다. 🟥 이것은 **빚이 아니라 «안 싣는 게 옳은» 쪽**이다(위 ⓒ 철회가
+  #       가른 그 구분): 주체가 없어서 못 재는 것이지, 재야 하는데 미룬 게 아니다. 주체가 언젠가
+  #       출하되면 이 예외도 같이 사라져야 한다 — 소비되지 않는 예외는 다음 진짜 누락을 삼킨다.
+  "scripts/test_liveness_echo_token_lanes.sh"
+  #     ⓐ-3 test_checklist_unblocked_lanes.sh · test_tikitaka_score_lanes.sh — 같은 부류.
+  #       주체(session_checklist.py · tikitaka_score.py)의 출하 여부와 무관하게, **레인은 이 레포의
+  #       개발 표면**이다. 소비자에게 실어봐야 픽스처(scripts/fixtures/…)까지 딸려가야 하고 매 실행
+  #       SKIP 이며, 그 SKIP 은 「부재」와 「건강함」을 또 같은 글자로 만든다.
+  #       🟥 반면 checklist_unblocked_hook.sh 는 **출하한다** — 출하되는 스니펫
+  #       (templates/settings.SubagentStop.snippet.json)이 그 경로를 직접 부르므로, 안 실으면
+  #       소비자 머신에서 훅이 조용히 죽는다. 같은 PR 안에서 셋의 처분이 갈리는 이유가 그것이다.
+  "scripts/test_checklist_unblocked_lanes.sh"
+  "scripts/test_tikitaka_score_lanes.sh"
+  "scripts/tikitaka_score.py"
   #     🟥 ⓒ 는 **철회했다 — cross-family R2 지적이 맞았다.** 초판이
   #       `templates/predelete_check.test.sh` 를 여기 넣고 «위 chamber 건과 같은 빚» 이라고 적었는데,
   #       그 둘은 같지 않다: chamber 는 «주체가 출하되는데 앵커가 안 나간다» 를 **빚으로 남긴** 것이고,
@@ -316,6 +367,16 @@ ACCEPTED_ABSENT=(
   # runner (labelled hub-local at the reference), which is a pointer for contributors, not a promise
   # of a shipped artifact — the skill's own save path works without it.
   "scripts/frontier_digest_daily.sh"
+  # 🟥 2026-09-18 — 발행 «확인» 3종. 이 레포 자기 릴리스 파이프라인의 부품이고 소비자 호출부가 없다.
+  # `publish_verify_poll.sh` 는 `.github/workflows/publish.yml` 의 verify 단계가 유일한 호출부이고,
+  # 워크플로 자체가 출하되지 않는다. 소비자는 `@chrono-meta/fh-gate` 를 발행하지 않으므로
+  # 이 스크립트를 부를 이유가 구조적으로 없다(PKG_NAME 으로 매개화돼 있긴 하다 — 그래서
+  # «불가능» 이 아니라 «호출부 부재» 라고 적는다).
+  # ⚠️ 그 결과 소비자 install 에서는 이 셋이 없고, selfcheck 의 해당 레인은 SKIP 으로 렌더된다.
+  # SKIP 은 PASS 가 아니다 — 이 레포에서는 레인이 실제로 돌고, 그것이 이 배선의 검증면이다.
+  "scripts/publish_verify_poll.sh"
+  "scripts/publish_verify_poll_stub_npm.sh"
+  "scripts/test_publish_verify_poll_lanes.sh"
 )
 
 # `--list-accepted`: print the ACCEPTED_ABSENT paths, one per line, and exit — no git/package.json

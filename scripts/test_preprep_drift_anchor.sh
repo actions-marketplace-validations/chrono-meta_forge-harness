@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # test_preprep_drift_anchor.sh — 이원화의 단일-소스 앵커.
 #
-# preprep 은 두 진입점을 갖는다: FH 안의 스킬(plugins/fh-commons/skills/preprep/)과,
+# preprep 은 두 진입점을 갖는다: FH 안의 스킬(plugins/fh-preprep/skills/preprep/)과,
 # 거기서 뽑아 세우는 standalone 현장 하네스. 🟥 **코드 사본이 둘이면 갈린다** —
 # FH 자신의 규칙이 그것을 «single source of truth collapse · double maintenance burden»
 # 이라 부른다. 그래서 이원화는 «복사본 둘»이 아니라 «단일 소스 + 얇은 두 진입점»이어야 하고,
@@ -14,7 +14,7 @@
 #   D3 진입점 문서가 단일 소스를 가리키나 (죽은 포인터 금지)
 set -uo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-SRC="$HERE/plugins/fh-commons/skills/preprep"
+SRC="$HERE/plugins/fh-preprep/skills/preprep"
 # standalone 배포 위치는 환경변수로 받는다. 기본값을 박으면 다른 머신에서 거짓 SKIP 이 된다.
 # 🟥 2026-09-03 — 그런데 «아무도 그 변수를 안 걸어서» D2 가 여태 SKIP 이었고, 그 사이 컴패니언
 #    저장소의 fork(724줄)가 정본(789줄)과 갈라져 L9~L11 을 안 부르고 있었다 — 정본 주석이 이미
@@ -32,19 +32,34 @@ ng(){ echo "  ❌ $1"; FAIL=$((FAIL+1)); }
 sk(){ echo "  ⏭  $1 — SKIPPED (**통과 아님**)"; SKIP=$((SKIP+1)); }
 
 # D1 — 단일 소스
+# 🟥 2026-09-10 정정: 파일 목록을 **박아 두지 않는다.** 박아 둔 목록은 조용히 낡는다 —
+#    이 검사는 「10파일 · python 7파일」이라고 출력하면서 그 사이 늘어난 레인 셋
+#    (lane_slide_relations · lane_geometry · lane_slide_refs)을 **한 번도 안 봤다.**
+#    개수는 참이었고 «무엇에 대한 개수인가»가 어긋난 형태다
+#    ([[feedback_count_is_true_but_referent_drifted]]).
+#    ⇒ 필수 문서만 이름으로 걸고, **python 은 디렉터리에서 뽑는다** — 레인을 새로 지으면
+#      자동으로 이 앵커 안에 들어온다. 배선을 잊는 것으로 검사를 벗어날 수 없다.
 missing=""
-for f in preprep.py interslide_deps.py lane_progression.py lane_adjacent_dup.py lane_promise.py lane_diagram.py diagram_from_json.py SKILL.md README.md surfaces.example.yaml; do
+for f in SKILL.md README.md surfaces.example.yaml preprep.py; do
   [ -f "$SRC/$f" ] || missing="$missing $f"
 done
+# 🟥 D2 와 같은 범위여야 한다 — 한쪽만 재귀로 고치면 D1 이 «20파일»이라 말하고
+#    D2 가 «24파일»이라 말해서, 같은 대상에 대해 두 숫자가 나온다(반쪽 수리).
+PY_FILES=$(find "$SRC" -name '*.py' -not -path '*/__pycache__/*' -not -path '*/.pytest_cache/*' | sort)
+PYN=0
+for f in $PY_FILES; do [ -f "$f" ] && PYN=$((PYN+1)); done
 if [ -n "$missing" ]; then ng "D1 단일 소스 결손:$missing"
+elif [ "$PYN" -lt 5 ]; then
+  ng "D1 python 파일이 $PYN 개뿐 — 스킬이 헐었거나 SRC 가 틀린 곳을 가리킨다"
 elif ! command -v python3 >/dev/null 2>&1; then
   sk "D1 구문 검사 — python3 부재라 «돌 수 있나»를 못 쟀다(UNMEASURED)"
 else
   synerr=""
-  for f in preprep.py interslide_deps.py lane_progression.py lane_adjacent_dup.py lane_promise.py lane_diagram.py diagram_from_json.py; do
-    python3 -c "import ast,sys;ast.parse(open(sys.argv[1],encoding='utf-8').read())" "$SRC/$f" 2>/dev/null || synerr="$synerr $f"
+  for f in $PY_FILES; do
+    python3 -c "import ast,sys;ast.parse(open(sys.argv[1],encoding='utf-8').read())" "$f" 2>/dev/null \
+      || synerr="$synerr ${f#$SRC/}"
   done
-  [ -z "$synerr" ] && ok "D1 단일 소스 10파일 실재 + python 7파일 구문 통과" \
+  [ -z "$synerr" ] && ok "D1 필수 문서 3 + preprep.py 실재 · python ${PYN}파일 전부 구문 통과(디렉터리에서 뽑음)" \
                    || ng "D1 구문 실패:$synerr"
 fi
 
@@ -54,13 +69,38 @@ if [ -z "$DIST" ]; then
 elif [ ! -d "$DIST" ]; then
   ng "D2 $DIST_SRC 이 가리키는 곳이 없다: $DIST (설정됐는데 부재 = 드리프트 아니라 배선 결함)"
 else
-  drift=""
-  for f in preprep.py interslide_deps.py lane_progression.py lane_adjacent_dup.py; do
-    if [ ! -f "$DIST/$f" ]; then drift="$drift $f(부재)"
-    elif ! cmp -s "$SRC/$f" "$DIST/$f"; then drift="$drift $f(갈림)"; fi
-  done
-  [ -z "$drift" ] && ok "D2 standalone 코드 5파일이 단일 소스와 바이트 동일 ($DIST_SRC)" \
-                  || ng "D2 드리프트:$drift ⇒ 사본이 둘이 됐다. 단일 소스에서 다시 뽑아라"
+  # 🟥 같은 정정 — 여기도 목록이 박혀 있었고, 게다가 **네 개를 돌면서 「5파일」이라고 출력**했다.
+  #    라벨이 자기 루프에 대해서도 거짓말한 셈이라, 세는 것과 말하는 것을 한 변수로 묶는다.
+  # 🟥 2026-09-21 — 범위가 «$SRC/*.py» 뿐이라 **하위 디렉터리를 통째로 안 봤다.**
+  #    그 사각에 `ooxml/gate.py` 가 있고, 바로 그 파일을 고치는 세션이 이 구멍을 발견했다
+  #    (고친 뒤 배포본에 반영 안 해도 앵커가 초록이었다). 「목록이 조용히 낡는다」의
+  #    디렉터리판이고, D1 이 이미 같은 이유로 목록 박기를 버렸다.
+  #    ⇒ 소스 트리에서 **재귀로** 뽑는다. 새 하위 디렉터리를 만들어도 자동으로 걸린다.
+  # 🟥 2026-09-22 — 범위가 «*.py» 뿐이라 **정본 41파일 중 15개(37%)를 아예 안 봤다.**
+  #    실측으로 드러났다: 배포본을 합류된 main 에서 다시 뽑으니 실제로 갈려 있던 파일이
+  #      fixtures/fixture_R3_negative.pptx  923b8f23…(25,278B) ↔ 3107ff54…(25,229B)
+  #      fixtures/fixture_R3_positive.pptx  64e8c545…(25,157B) ↔ 21d9d19a…(25,109B)
+  #    🟥 **R3 레인의 known-pair 짝 그 자체**다 — 배포본에서 R3 를 돌렸다면 틀린 짝으로
+  #    교정하고 있었다. 그런데 이 앵커는 여태 초록이었다.
+  #    사각의 구성: SKILL.md · presentation_checklist.md · README.md(스킬의 «행동») ·
+  #    surfaces/canon/jargon 예시 · c1_baseline.txt(판정 기준선) · fixtures/*.md ×6 ·
+  #    fixtures/*.pptx ×2(known-pair 의 짝). **문서·기준선·픽스처가 전부 그 안에 있었다.**
+  #    ⇒ 교리가 «사본이 둘이면 갈린다» 인데 «무엇이 사본인가» 가 확장자로 좁혀져 있었다.
+  #    바로 위 재귀 정정과 **같은 얼굴, 축만 다르다**(그땐 디렉터리, 이번엔 확장자).
+  # 🟥 **PASS 문구의 «출처 토큰을 괄호 맨 앞 + 뒤에 공백» 형태로 유지해라.** 레인 L4 는
+  #    「어느 출처가 이겼나」를 그 모양으로 잡는다. 2026-09-21 에 한 번 깨졌고(`· 하위 디렉터리
+  #    포함` 을 더하면서), 2026-09-22 에 내가 또 깼다 — 출처를 괄호 끝으로 옮겼더니 L4 가 적색.
+  #    문구를 바꿀 거면 L4 와 **같은 호출에서** 바꿔라. 레인을 코드에 맞추는 게 아니다.
+  # ⚠️ **한 방향이다** — 정본에 있는 것이 배포본에 같게 있나만 본다. 배포본 «전용» 파일
+  #    (surfaces.yaml 등 운영 설정)은 이 검사의 대상이 아니고, 초록이 그것들을 승인하지 않는다.
+  drift=""; n=0
+  while IFS= read -r f; do
+    rel="${f#$SRC/}"; n=$((n+1))
+    if [ ! -f "$DIST/$rel" ]; then drift="$drift $rel(부재)"
+    elif ! cmp -s "$f" "$DIST/$rel"; then drift="$drift $rel(갈림)"; fi
+  done < <(find "$SRC" -type f -not -path '*/__pycache__/*' -not -path '*/.pytest_cache/*' -not -name '*.pyc' | sort)
+  [ -z "$drift" ] && ok "D2 standalone ${n}파일이 단일 소스와 바이트 동일 ($DIST_SRC · 확장자 무관 · 하위 디렉터리 포함). 🟥 정본→배포본 한 방향이라 배포본 전용 파일은 이 초록의 대상이 아니다" \
+                  || ng "D2 드리프트($n 중):$drift ⇒ 사본이 둘이 됐다. 단일 소스에서 다시 뽑아라"
 fi
 
 # D3 — 진입점 포인터가 죽었나

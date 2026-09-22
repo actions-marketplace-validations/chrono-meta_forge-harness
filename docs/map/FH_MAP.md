@@ -124,9 +124,9 @@
 | 항목 | 무엇을 막나 | 기제 (파일) | 증거 · 실측 |
 |---|---|---|---|
 | **4축 마커 커밋 게이트** | FH 자산을 «검증했다고 말만 하고» 커밋하는 것 | `templates/.git-hooks/pre-commit` `validate_marker_floor` + `validate_*_leg` 12(soul · axes-run · crossfamily · standpoint · thirdparty · defeater · affected …) | 설치된 pre-commit 경로에서 마커 부재·공허 → **커밋 차단**(화면에 어느 파일에 무엇을 쓰라고 찍힌다) · 클라이언트 훅이라 `--no-verify` 우회 가능 · 마커는 gitignored 라 CI 미검증. 레인 `scripts/test_marker_*_lanes.sh` 9 스위트 · 🟡 정직 표기: 훅은 값의 **형식**(닫힌 enum · 비공허 근거)을 검증하고 **진위**는 못 본다 — `CLAUDE.md` §자기 대조 |
-| **파괴 연산 푸시 게이트** | 원격 브랜치 삭제 · force push · main 직접 푸시가 «잊고» 나가는 것 | `templates/.git-hooks/pre-push`(**클라이언트 훅** — `--no-verify` 로 우회된다) — 참조별 판정을 훅 안에서 계산, 분류 불가도 차단 | 설치된 경로에서 통과는 명시·로그되는 `DESTRUCTIVE_OP_OK=1` · `MAIN_PUSH_OK=1` 만. 레인 `scripts/test_prepush_destructive_lanes.sh`. **서버측 floor 는 `main` PR 전용(`enforce_admins`) + `validate` 필수 체크 하나** — 브랜치 삭제·force 는 서버가 안 막는다. 발행(npm · 공개 전환)은 이 행이 아니라 다음 행 + Pre-Publish 절차 |
+| **파괴 연산 푸시 게이트** | 원격 브랜치 삭제 · force push · main 직접 푸시가 «잊고» 나가는 것 | `templates/.git-hooks/pre-push`(**클라이언트 훅** — `--no-verify` 로 우회된다) — 참조별 판정을 훅 안에서 계산, 분류 불가도 차단 | 설치된 경로에서 통과는 명시·로그되는 `DESTRUCTIVE_OP_OK=1` · `MAIN_PUSH_OK=1` 만. 레인 `scripts/test_prepush_destructive_lanes.sh`. **서버측 floor 는 `main` PR 전용(`enforce_admins`) + 필수 체크 둘(`validate` · `new-code-anchor` — 2026-09-17 두 층 직독; 🟥 «validate 하나» 는 낡은 서술이었다)** — 브랜치 삭제·force 는 서버가 안 막는다. 발행(npm · 공개 전환)은 이 행이 아니라 다음 행 + Pre-Publish 절차 |
 | **사설 토큰 스캔** | 운영자 실명 · 조직 자산명 · 홈 경로가 공개 파일에 실리는 것 | pre-commit 기밀 스캔(staged 추가 줄) · pre-push 재검(푸시 범위 커밋의 추가 줄, `pre-push:429-448`) · `scripts/public_surface_scan_files.sh`(`prepublishOnly`, 발행 파일셋 **전수** — 유일한 파일셋 스캔) · `scripts/residency_closure_scan.py` | 설치된 훅 경로에서 HIGH/MED 차단 · `PUBLIC_SURFACE_OK=1` 로만 통과(로그). 범위 = **동봉 기본 패턴 + 설정된 조직 패턴**(gitignored, 없으면 기본 패턴만 돌고 경고). 이 문서와 JSON 3장 = residency **CLEAN — 그 패턴 범위 안의 스크리닝**(2026-09-05), «보내도 안전» 이 아니다 |
-| **레인 스위트** | 훅·스크립트가 «있다» 로 끝나는 것 — 아무도 실행 안 하는 레인은 산문이다 | `scripts/selfcheck.sh` · `scripts/lane_runner_check.sh`(러너 없는 스위트를 센다) | **108 스위트 · 108 배선(선언 면제 1 포함) · 0 debt**(rc=0). CI `validate` 잡이 selfcheck 를 돌리고 `main` 의 **유일한 필수 체크**다 |
+| **레인 스위트** | 훅·스크립트가 «있다» 로 끝나는 것 — 아무도 실행 안 하는 레인은 산문이다 | `scripts/selfcheck.sh` · `scripts/lane_runner_check.sh`(러너 없는 스위트를 센다) | **108 스위트 · 108 배선(선언 면제 1 포함) · 0 debt**(rc=0). CI `validate` 잡이 selfcheck 를 돌리고 `main` 의 필수 체크 **둘 중 하나**다(다른 하나 = `new-code-anchor`; Axis 1 `regression-guard.yml` 은 2026-08-29 부터 4축 자산 전 클래스에서 **돌지만 필수는 아니다** — 2026-09-17 정정, «유일한» 은 낡은 서술이었다) |
 | **격리 sim · 첫 실사용(ⓔ)** | «읽으면 맞다» 로 규칙 변경을 끝내는 것 | `scripts/sim_isolated_run.sh` — 일회용 클론 · 플로어 티어 · ARM/CTRL 한 변수 · reps≥3 바 | 헤더가 실패한 첫 런(라이브 레포 sim 이 launchd 를 등록한 사고, 2026-08-29)을 적고 격리 범위와 **못 막는 것**을 갈라 적는다 |
 | **야간 live-eval** | 규칙이 «남아 있는데 발화가 멈춘» 드리프트 | `scripts/probe_live_eval.sh` · `probes_live.yaml`(12) · `scripts/com.forge-harness.live-eval.plist` | 0 바이트 응답 = **FAILED-TO-RUN, 분모 제외**. 같은 날 두 런을 갈라 적는다 — ⓐ 2026-09-05 02:30 **launchd 예약 런** = 프로브 0 실행(launchd PATH 환경) → `NO-PROBES-RAN` 으로 남았고 «통과» 로 접히지 않았다 · ⓑ 같은 날 낮 **수동 로컬 런**(sonnet) = 12/12 실행, PASS 8 · FAIL 4(문턱 미집행) |
 | **되돌림 프로브(ⓕ)** | 앵커가 장식인 것 — 지워도 초록 | `scripts/revert_probe.sh` · 각 레인의 fail-before 규약 | 이 문서의 레인도 그렇게 검증했다: 노드 경로 하나를 가짜로 바꾸면 `L2 … missing: 1 of 37` 로 빨개짐(아래 §재생성) |
@@ -260,6 +260,10 @@ node $A deliver  workflow     docs/map/fh_process.workflow.json     docs/map/fh_
 
 # 🟥 deliver 다음이 «끝»이 아니다 — 후처리가 의무다(폭 하한 + SVG 재생성). 안 돌리면 옛 폭으로 발행된다
 python3 scripts/map_postprocess.py docs/map/*.html      # rc=3 이면 렌더러 드리프트 — 멈추고 리터럴을 확인해라
+#   rc=3 은 폭 하한 리터럴 부재 **또는** 깜빡임 억제 계약 위반이다(메시지가 어느 쪽인지 적는다):
+#   ⓐ 첫 페인트 전 테마 해소가 <style>/<body> 뒤로 밀렸거나 사라졌다 → 라이트 모드 첫 프레임이 어둡게 뜬다
+#   ⓑ `.pulse-dot` 에 data-motion-capable 게이트 없이 애니메이션이 걸렸다
+#   🟥 계약 검사는 **기록의 형태**만 본다 — 실제 렌더는 아래 `test_map_flash_render_lanes.sh` 가 잰다.
 
 # PNG = 로컬 서버 + Chrome 헤드리스 라이트 스크린샷(뷰어 크롬 포함). 창 높이는 그 페이지 scrollHeight 에 맞춘다
 #       (2048×1320 고정이던 옛 방식은 폭 하한을 올린 뒤 아래쪽 카드가 잘린다 — 잘린 그림을 문서에 싣지 않는다)
@@ -269,8 +273,30 @@ python3 scripts/map_postprocess.py docs/map/*.html      # rc=3 이면 렌더러 
 #   (dataflow 는 2048×1360 · architecture 는 2048×1320)
 
 bash scripts/test_fh_map_paths_lanes.sh          # 노드 경로 전수 test -e (부재 0 이어야 초록)
-bash scripts/test_map_postprocess_lanes.sh       # 후처리 계약 9 레인 (L9 = 발행본이 실제로 패치됐나)
+bash scripts/test_map_postprocess_lanes.sh       # 후처리 계약 16 레인 (L9 = 발행본이 패치됐나 · L10~L15 = 깜빡임 억제가 아직 있나)
+bash scripts/test_map_flash_render_lanes.sh      # 실제 렌더 7 레인 (~60초, 브라우저 필요 — 없으면 NOT MEASURED)
 ```
+
+- **깜빡임 억제 — 무엇이 «기록»이고 무엇이 «실물»인가 (2026-09-21 실측)**. `map_postprocess.py` 의
+  계약 검사는 억제 코드가 **문서에 있나**만 본다. 실제로 안 깜빡이는지는 `map_flash_render_probe.js`
+  가 헤드리스 크로미움으로 첫 페인트 구간을 프레임으로 떠서 잰다. 매 실행이 «사전 페인트 테마
+  해소를 제거한 쌍둥이»를 같이 재고, 그쪽이 안 빨개지면 계기 고장(rc=4)으로 죽는다.
+
+  | 팔 | 라이트 모드 첫 페인트 최저 휘도 (0~255) |
+  |---|---|
+  | 발행본 세 장 | **239.4 · 243.3 · 245.7** — 어두운 프레임 0 |
+  | 사전 페인트 해소를 제거한 쌍둥이 (known-positive) | **6.0** — 약 1.4 초간 통째로 어둡다 (CPU 6× 스로틀) |
+
+  🟥 **ⓑ 펄스 쪽은 서술을 정정한다.** 여기 「빠지면 부팅 중·reduced-motion 에서도 깜빡인다」고
+  적혀 있었는데, 실측은 **세 장 모두 점이 아예 안 뛴다**다: 모션 거버너의 `capable` 이
+  `svg[data-animation="trace"]` 를 요구하는데 이 세 문서의 DOM 에는 그런 svg 가 없어
+  `data-motion-capable` 이 **한 번도 안 켜진다**(`getComputedStyle(.pulse-dot).animationName === 'none'`,
+  3초간 픽셀 변화 0.000). 즉 ⓑ 계약이 막는 것은 **잠재 위험**이고, 오늘 화면에서 벌어지는 일이
+  아니다. 게이트를 손으로 켜면 점은 뛰고(진폭 8.2~13.1) `prefers-reduced-motion: reduce` 에서
+  다시 멈춘다(0.000) — 그 둘이 이 계기의 known-pair 다.
+
+  🟥 **그래도 사람 눈을 대체하지 않는다.** 헤드리스 합성기는 실제 화면이 아니고, 이 프로브는
+  폰트 적재·GPU 합성·주사율·색 관리를 못 본다. 분리폭(6 vs 244)이 큰 것은 **그 한 축에서만** 크다.
 
 - 렌더러는 **코드를 외부로 보내지 않는다** — `bin/archify.mjs` 에 네트워크 import 0, 렌더러 전체에서 네트워크 import 는 `renderers/shared/brand-marks.mjs`(명시적 `brands capture <url>` 만)와 `scripts/check-update.mjs`(고정 매니페스트 URL, 위 환경변수로 차단) 둘뿐(2026-09-05 grep 실측, v2.17.0-dev.1).
 - 뷰어의 고정 UI(검색 · 범례 · Export 버튼)는 영어다 — 렌더러가 한국어 UI 를 지원하지 않아 `meta.locale` 을 비웠다. 본문(노드 · 카드)은 한국어다.

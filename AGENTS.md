@@ -32,7 +32,7 @@ operations or steel-quench.
 | `expert` | `plugins/fh-meta/agents/expert.md` | Web-grounded domain accuracy and current practice | `sim-conductor` Area E/D, paper review, direct |
 | `challenger` | `plugins/fh-meta/agents/challenger.md` | Evidence-cited adversarial evaluation | `steel-quench`, `harvest-loop`, `sim-conductor`, direct |
 | `fact-checker` | `plugins/fh-meta/agents/fact-checker.md` | Pre-recommendation duplicate and stale-fact search | Before new asset creation or recommendation |
-| `hub-persona-auditor` | `plugins/fh-meta/agents/hub-persona-auditor.md` | External-facing pre-publication persona audit | `hub-cc-pr-reviewer`, `sim-conductor`, direct |
+| `hub-persona-auditor` | `plugins/fh-meta/agents/hub-persona-auditor.md` | External-facing pre-publication persona audit | `harness-pr-reviewer`, `sim-conductor`, direct |
 | `quench-challenger` | `plugins/fh-commons/agents/quench-challenger.md` | Steel-quench attack plus concrete fix direction | `steel-quench` Wave 1, `install-doctor`, `marketplace-gate` |
 | `persona-innovator` | `plugins/fh-meta/agents/persona-innovator.md` | Naming gaps, frame proposals, frontier signals | `sim-conductor` Area A, `harvest-loop`, direct |
 
@@ -105,6 +105,33 @@ Because non-Claude runtimes do not auto-load Claude path rules, apply these rule
    Anchors the check accepts: a URL · arXiv/DOI · `WebSearch`/`WebFetch` · `출처` · `원문 확인` ·
    `서베이`. Override is `FH_NOVELTY_OK=1`, and it appends to `tracks/_meta/.novelty_override_log`.
    ⚠️ The check sees only that an anchor **exists**, never that it supports the claim.
+1-b. **Before you trust the gate at all: check that this checkout is WIRED.** 🟥 Every "the hook
+   blocks this" sentence in `CLAUDE.md` and in item 1 above is true **only in a checkout where
+   `core.hooksPath` points at `templates/.git-hooks`.** Git tracks the hook files; it does **not**
+   carry that config value. Measured 2026-09-21, same commit, two checkouts: **15 layers compared,
+   only 4 READ layers matched — all 11 ENFORCE/EVIDENCE/PATTERN layers were opposite.** The same
+   commit passed silently in one and was blocked by Axis 2+3 in the other; what differed was the
+   wiring, not the code.
+   🟥 **The dangerous direction is the quiet one**: a gate that PASSED and a gate that NEVER RAN
+   print the same thing — nothing. A third direction is quieter still: with the pattern layer
+   absent the confidentiality scan still runs and still goes green, while company-name and
+   real-name classes are simply `UNSCANNED`.
+
+   ```
+   bash scripts/env_layer_fingerprint.sh          # PRESENT/ABSENT/UNMEASURED per layer, no values
+   bash scripts/gate_bootstrap_ephemeral.sh --check   # rc=1 while anything is missing
+   bash scripts/gate_bootstrap_ephemeral.sh --apply   # wires hooksPath + UTF-8 locale
+   ```
+
+   Three things are needed and only two are mechanizable: ⓐ the `core.hooksPath` wiring ⓑ a
+   **UTF-8 locale** (under `LC_CTYPE=POSIX` all four non-vacuity legs of an honest Korean marker
+   are rejected as "vacuous" — over-blocking, the opposite failure) ⓒ the two gitignored evidence
+   files, which **a human writes**. 🟥 The bootstrap script deliberately does **not** create
+   markers — auto-generating evidence is closing the gate with a forgery.
+   ⚠️ `scripts/fh_node_check.sh` cannot warn you here: it travels the same gitignored channel as
+   the `settings*.json` it would read, so on an unwired node the detector is absent too.
+   Detail: `knowledge/shared/harness-core/checkout_layer_drift.md` §8.
+
 2. **Company residency:** raw company source, secrets, hostnames, internal names, stack traces, and
    unredacted findings never leave the local machine, including to same-family cloud models. Only a
    sanitized summary may leave; exceptions require explicit operator approval and a gitignored note.
@@ -120,6 +147,12 @@ Because non-Claude runtimes do not auto-load Claude path rules, apply these rule
    require instrument suspicion.
 6. **Irreversible intent:** before publish, delete, or history rewrite, read and apply the
    Pre-Publish or Destructive-Op gate in `CLAUDE.md`. `pre-push` is only the git-side backstop.
+   **An automated verdict never clears an irreversible gate on its own, whatever its measured error
+   rate.** Surface class decides, not the number: a wrong finding on a review surface costs a reader
+   a minute, while on publish/delete/rewrite the wrong call is the whole loss. So improving a verdict
+   engine's score is not a route to promoting it onto an irreversible surface — the terminal step
+   stays a human or an explicit logged override. This matters here because a non-Claude runtime
+   reading this file is itself often the verdict engine in question.
 7. **Self-contrast on asset touch:** the trigger for the three-layer self-contrast (process ·
    engines · identities) is *touching an FH/PMH asset*, not being asked. Pick verification axes by
    failure mode — running all six every time is not the rule. Record, in the existing Axes 2–3
@@ -266,9 +299,9 @@ control; FH supplies the quality gate after goal completion.
 
 | Tier | Definition | Skills |
 |---|---|---|
-| **M1 — Full** | No Claude-native dependency | `token-budget-gate`, `asset-placement-gate`, `phantom-quench`, `deep-clarify`, `convergence-loop`, `ko-tech-writer` (visual-QA steps degrade to text-only) |
+| **M1 — Full** | No Claude-native dependency | `token-budget-gate`, `asset-placement-gate`, `phantom-quench`, `deep-clarify`, `convergence-loop`, `ko-tech-writer` (visual-QA degrades to text-only; the spoken register's Step 5-s renders audio through a shell TTS call — available here — but its **listening** pass is human in every runtime, so it degrades to declared-unmet, not to a Codex-specific gap) |
 | **M2 — Partial** | Core works; native agent or slash-command steps need adaptation | `deliberation`, `steel-quench`, `harness-doctor`, `context-doctor`, `sim-conductor`, `harvest-loop` |
-| **M3 — Claude-only** | Requires a Claude hook or session-scoped dispatch | `goal-quench`, `hub-cc-pr-reviewer`, `install-wizard` |
+| **M3 — Claude-only** | Requires a Claude hook or session-scoped dispatch | `goal-quench`, `harness-pr-reviewer`, `install-wizard` |
 
 > **Detail**: See `knowledge/shared/harness-core/agents_md_runtime_details.md §Invocation-patterns`
 > — single, parallel, and wave composition examples — read when choosing a dispatch shape.

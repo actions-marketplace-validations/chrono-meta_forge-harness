@@ -1,10 +1,10 @@
 {
   "name": "fh-commons",
-  "version": "3.1.4",
+  "version": "3.17.0",
   "engines": {
     "claudeCode": ">=1.0.0"
   },
-  "description": "Cross-project utility skill bundle — 6 skills + 1 agent. Domain-agnostic and portable: convergence-loop, deliberation, mcp-circuit-breaker, token-budget-gate, ko-tech-writer, preprep + quench-challenger agent.",
+  "description": "Cross-project utility skill bundle — 6 skills + 7 agents. Domain-agnostic and portable: convergence-loop, deliberation, mcp-circuit-breaker, token-budget-gate, ko-tech-writer, persona-cast + quench-challenger and the 6-lens web-review cast (designer · ux-writer · fe-dev · be-dev · qa · a11y).",
   "author": {
     "name": "chrono-meta",
     "email": "chrono-meta@users.noreply.github.com"

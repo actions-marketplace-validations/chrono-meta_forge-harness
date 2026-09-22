@@ -534,6 +534,176 @@ out="$(GIT_DIR="$PUBLIC/.git" GIT_WORK_TREE="$BEX" MID=lanea run 2>&1)"; rc=$?
 [ ! -e "$BEX/tracks-meta" ]; chk $? "nothing was mirrored"
 [ "$(git -C "$PUBLIC" log --oneline 2>/dev/null | grep -c .)" -eq 0 ] && [ -z "$(git -C "$PUBLIC" diff --cached --name-only 2>/dev/null)" ]; chk $? "the env-selected repository received neither a commit nor staged files"
 
+echo "── B9 a NESTED repo's .git/ in the destination does not trip the destination-newer guard (2026-09-15, 4th recurrence) ──"
+new_env b9
+fake_rp 'echo "[sync-from-be] (dry-run) pulled 1 file(s) companion → hub  (clean 1 · review 0)"; exit 0'
+mkdir -p "$HUB/tracks/_meta/nested/.git"
+printf 'real content\n'  > "$HUB/tracks/_meta/nested/real.md"
+printf 'git-index-v1\n'  > "$HUB/tracks/_meta/nested/.git/index"
+printf 'hub-v1\n'        > "$HUB/tracks/_meta/card.md"
+MID=lanea run >/dev/null 2>&1
+[ -f "$BEX/tracks-meta/nested/real.md" ]; chk $? "CONTROL: a real file under the nested repo still syncs (the exclusion is not over-broad)"
+[ ! -e "$BEX/tracks-meta/nested/.git/index" ]; chk $? "the nested .git/ is never mirrored"
+sleep 2
+mkdir -p "$BEX/tracks-meta/nested/.git"
+printf 'git-wrote-this-later\n' >> "$BEX/tracks-meta/nested/.git/index"
+[ "$BEX/tracks-meta/nested/.git/index" -nt "$HUB/tracks/_meta/nested/.git/index" ]; chk $? "CONTROL: the destination .git/index IS newer + divergent (the incident is reproduced)"
+out="$(MID=lanea run 2>&1)"; rc=$?
+[ "$rc" -eq 0 ]; chk $? "a newer .git/index in the destination does NOT abort the sync (got rc=$rc)"
+printf '%s' "$out" | grep -q 'SYNC ABORTED'; [ $? -ne 0 ]; chk $? "no abort wall is printed"
+sleep 2
+printf 'peer-node-added-this\n' >> "$BEX/tracks-meta/card.md"
+out="$(MID=lanea run 2>&1)"; rc=$?
+[ "$rc" -ne 0 ]; chk $? "KNOWN-POSITIVE: a newer REAL file still trips the guard (got rc=$rc) — excluding .git/ did not disarm it"
+
+# ── tar 폴백 × SYNC_EXCLUDES 패리티 (2026-09-17) ────────────────────────────────
+# 🟥 왜 있나: rsync 경로(:675)는 SYNC_EXCLUDES 배열을 쓰는데 **tar 폴백은 목록을 손으로 다시
+#    적고 있었다.** 그래서 2026-09-16 에 배열에 `.git/` 를 넣었는데 폴백만 안 닫혔고, #735
+#    머지에서 그 재작성이 떨어져 나가 **어느 PR 에도 안 실린 채** 남았다(peer 실측 2026-09-17).
+#    ⚠️ 표기가 달라서 손으로 적었던 것이다(rsync `logs/` ↔ tar `logs`). 변환 한 줄이 그 이유를 없앴다.
+echo ""
+echo "── tar fallback × SYNC_EXCLUDES parity ──"
+
+_sync_src() { sed -n '1,$p' "$REPO/scripts/sync-to-be.sh" 2>/dev/null; }
+REPO="${REPO:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+
+# E: 계기가 대상을 못 읽으면 INSTRUMENT-ERROR 다 — «제외가 잘 된다» 로 접지 않는다.
+_ex_line="$(_sync_src | grep -n '^SYNC_EXCLUDES=' | head -1)"
+if [ -z "$_ex_line" ]; then
+  FAIL=$((FAIL+1)); printf '  ❌ %s
+' "E: INSTRUMENT-ERROR — SYNC_EXCLUDES 정의를 못 읽었다 (이 아래 판정은 무효)"
+else
+  ok "E: SYNC_EXCLUDES 정의를 읽었다 (계기 살아 있음)"
+
+  # A: 현행이 배열을 쓰는가. 손목록으로 되돌아가면 여기서 적색.
+  # 🟥 파이프로 흘리지 않는다 — 여기는 `_sync_src | grep -q` 였고 그 형태가 CI 를 간헐적으로
+  #    거짓 빨강으로 만들었다(2026-09-21). 이 파일은 `set -uo pipefail`(:14) 이고 `grep -q` 는
+  #    첫 매치에서 즉시 종료하는데, 그때 생산자가 아직 쓸 것이 **파이프 버퍼(64 KiB)보다 많이**
+  #    남아 있으면 SIGPIPE 로 죽어 141 을 남긴다. pipefail 이 그 141 을 파이프라인 종료코드로
+  #    올리므로 **grep 은 찾았는데 `if` 는 실패로 읽는다.** 대상은 70,726 B 이고 매치(:710)
+  #    이후로 17,918 B 가 남아서 조건이 성립했다. 실측 4/200(러너가 느릴수록 더 자주 뜬다).
+  #    ⇒ 파이프를 없앤다. `grep` 에 파일을 직접 주면 경합할 상대가 없다.
+  #    레인은 scripts/test_pipefail_sigpipe_lanes.sh (결정적 known-pair 50/50 ↔ 0/50).
+  if grep -q 'tar cf - "\${tex\[@\]}"' "$REPO/scripts/sync-to-be.sh"; then
+    ok "A: tar 폴백이 SYNC_EXCLUDES 배열을 쓴다 (손목록 아님)"
+  else
+    FAIL=$((FAIL+1)); printf '  ❌ %s
+' "A: tar 폴백이 배열을 안 쓴다 — 손목록으로 되돌아갔다"
+  fi
+
+  # C: 🟥 **클래스를 닫는 팔 — 그리고 초판은 장식이었다(2026-09-17 되돌림이 잡았다).**
+  #    초판은 배열→tar 변환을 **이 레인 안에서 새로 적어** 테스트했다. 그래서 대상(sync-to-be.sh)을
+  #    손목록으로 되돌려도 C 는 자기 합성 서브셸만 돌아 **통과했다** — A 만 빨개졌다.
+  #    앵커가 대상을 안 보면 그것은 앵커가 아니다([[feedback_anchor_can_be_decorative]]).
+  #    ⇒ 변환 줄을 **대상 소스에서 추출해서** 쓴다. 손목록으로 돌아가면 추출이 실패하고 C 가 적색.
+  _tex_line="$(_sync_src | grep -m1 'tex+=("--exclude=')"
+  if [ -z "$_tex_line" ]; then
+    FAIL=$((FAIL+1)); printf '  ❌ %s\n' "C: tar 폴백에 배열 변환 줄이 없다 — 목록이 갈라졌다(클래스 열림)"
+  else
+    _c_tmp="$(mktemp -d)"
+    mkdir -p "$_c_tmp/src/zzz_probe_dir" "$_c_tmp/dst"
+    echo probe > "$_c_tmp/src/zzz_probe_dir/x.txt"
+    echo real  > "$_c_tmp/src/keep.md"
+    # 대상에서 뽑은 그 줄을 그대로 실행한다 — 우리가 다시 적지 않는다.
+    /bin/bash -c '
+      SYNC_EXCLUDES=(".gitkeep" "zzz_probe_dir/")
+      tex=()
+      '"$_tex_line"'
+      ( cd "'"$_c_tmp"'/src" && tar cf - "${tex[@]}" . ) | ( cd "'"$_c_tmp"'/dst" && tar xf - )' 2>/dev/null
+    if [ ! -f "$_c_tmp/dst/zzz_probe_dir/x.txt" ] && [ -f "$_c_tmp/dst/keep.md" ]; then
+      ok "C: 대상에서 뽑은 변환 줄이 새 항목을 제외한다 (클래스가 닫혔다 · 실물은 통과)"
+    else
+      FAIL=$((FAIL+1)); printf '  ❌ %s\n' "C: 대상의 변환 줄이 새 항목을 반영 안 한다"
+    fi
+    rm -rf "$_c_tmp"
+  fi
+
+  # 복귀 경로도 같은 뿌리다 — 나가는 쪽만 막으면 돌아오는 쪽으로 들어온다.
+  if grep -q "! -path '\*/\.git/\*'" "$REPO/scripts/sync-from-be.sh" 2>/dev/null; then
+    ok "R: 복귀 경로(sync-from-be) 도 .git 을 제외한다"
+  else
+    FAIL=$((FAIL+1)); printf '  ❌ %s
+' "R: 복귀 경로에 .git 제외가 없다 — 돌아오는 쪽으로 들어온다"
+  fi
+fi
+
+# ── find predicate (check_dest_newer) × SYNC_EXCLUDES parity — the THIRD spot (2026-09-18) ────
+# 🟥 왜 있나: #740 이 tar 폴백(④)과 복귀 경로(⑤)를 닫았지만, 그 커밋 자신의 메시지가 "남은 것"
+#    으로 지목한 자리는 손대지 않았다 — check_dest_newer() 의 find 술어(구 :453 주석)다. 그 자리는
+#    SYNC_EXCLUDES 를 find 문법으로 손으로 다시 적고 있었고, sync_guard_check.sh §1 은 텍스트
+#    대조만 했지 단일소스로 묶지는 않았다(대조 로직 자체가 죽거나 비면 다섯 번째로 재발한다 —
+#    실제로 ④⑤ 가 그렇게 한 번 유실됐었다, tracks/_meta/parallel_fhgate_2026-09-15.md §3-e-0-a).
+#    check_dest_newer() 는 이제 SYNC_EXCLUDES 에서 뽑은 배열을 쓴다(tar 폴백과 같은 '/' 유무 변환).
+echo ""
+echo "── find predicate (check_dest_newer) × SYNC_EXCLUDES parity — the third spot ──"
+
+# E: 계기가 대상(check_dest_newer 함수 본문)을 못 읽으면 INSTRUMENT-ERROR 다.
+_cdn_body="$(_sync_src | awk '/^check_dest_newer\(\) \{/,/^}/')"
+if [ -z "$_cdn_body" ]; then
+  no "E: INSTRUMENT-ERROR — check_dest_newer() 를 못 읽었다 (이 아래 판정은 무효)"
+else
+  ok "E: check_dest_newer() 를 읽었다 (계기 살아 있음)"
+
+  # A: 현재 find 가 배열을 쓰는가(손목록으로 되돌아가면 여기서 적색).
+  if printf '%s' "$_cdn_body" | grep -q 'find "\$src" -type f \${dexclude\[@\]'; then
+    ok "A: check_dest_newer 의 find 가 SYNC_EXCLUDES 에서 뽑은 배열을 쓴다 (손목록 아님)"
+  else
+    no "A: check_dest_newer 의 find 가 배열을 안 쓴다 — 손목록으로 되돌아갔다"
+  fi
+
+  # C: 🟥 클래스를 닫는 팔 — 2026-09-18 재작성. 초판은 «변환 루프» 만 뽑아 실행했는데,
+  #    cross-family codex 가 그 형태의 공허-초록 경로를 냈다: 루프가 옳아도 그 뒤에서
+  #    `dexclude=()` 로 끊기면 추출본은 여전히 통과하고 production `find` 만 샌다.
+  #    그래서 조각이 아니라 **함수 전체를 뽑아 실제로 호출**한다 — 실 `find` 줄이 그 안에
+  #    있으므로 «변환이 production 경로로 들어간다» 가 실행으로 증명된다.
+  _cdn_fn="$(_sync_src | awk '/^check_dest_newer\(\) \{/,/^}/')"
+  if [ -z "$_cdn_fn" ]; then
+    no "C: check_dest_newer() 전문을 못 뽑았다 (계기 오류 — 아래 판정 무효)"
+  else
+    _c_tmp="$(mktemp -d)"
+    mkdir -p "$_c_tmp/src/zzz_probe_dir" "$_c_tmp/dst/zzz_probe_dir"
+    echo real > "$_c_tmp/src/keep.md";            echo real > "$_c_tmp/dst/keep.md"
+    echo probe > "$_c_tmp/src/zzz_probe_dir/x.txt"
+    echo probe > "$_c_tmp/dst/zzz_probe_dir/x.txt"
+    # 목적지의 «제외 대상» 을 더 새롭게 만든다: 제외가 살아 있으면 NEWER_HITS 에 안 뜬다.
+    sleep 1; touch "$_c_tmp/dst/zzz_probe_dir/x.txt"
+    _run_cdn() {   # $1 = SYNC_EXCLUDES 선언 문자열
+      /bin/bash -c '
+        set -u
+        '"$1"'
+        NEWER_HITS=""
+        _dest_content_differs() { return 0; }
+        '"$_cdn_fn"'
+        check_dest_newer "'"$_c_tmp"'/src" "'"$_c_tmp"'/dst"
+        printf "%s" "$NEWER_HITS"
+      ' 2>&1
+    }
+    # ARM: 새 항목을 SYNC_EXCLUDES 에만 추가한다 — 손으로 적는 자리가 없으므로 반영돼야 한다.
+    _arm="$(_run_cdn 'SYNC_EXCLUDES=(".gitkeep" "zzz_probe_dir/")')"
+    # CONTROL: 같은 실행에서 그 항목을 빼면 «반드시» 떠야 한다. 안 뜨면 이 레인은
+    # «제외가 먹혔다» 와 «픽스처가 애초에 신호를 안 만든다» 를 구분하지 못한다.
+    _ctl="$(_run_cdn 'SYNC_EXCLUDES=(".gitkeep")')"
+    if printf '%s' "$_ctl" | grep -q 'zzz_probe_dir/x.txt'; then
+      ok "C-control: 제외에서 빼면 실제로 NEWER_HITS 에 뜬다 (픽스처가 신호를 만든다)"
+      if printf '%s' "$_arm" | grep -q 'zzz_probe_dir/x.txt'; then
+        no "C: SYNC_EXCLUDES 에 추가한 새 항목이 production find 에 반영 안 된다 — arm=[$_arm]"
+      else
+        ok "C: 새 항목이 배열에만 추가돼도 production check_dest_newer 가 제외한다 (클래스 닫힘)"
+      fi
+    else
+      no "C-control: 컨트롤이 신호를 못 만들었다 — 계기 오류 (arm 판정 무효). ctl=[$_ctl]"
+    fi
+    # E2: 빈 배열에서 죽지 않는가 (cross-family codex 지목: set -u 거짓중단)
+    _empty="$(_run_cdn 'SYNC_EXCLUDES=()')"
+    if printf '%s' "$_empty" | grep -q 'unbound variable'; then
+      no "E2: SYNC_EXCLUDES 가 비면 unbound variable 로 죽는다 — sync 전체가 거짓 중단된다"
+    else
+      ok "E2: 빈 SYNC_EXCLUDES 에서도 죽지 않는다 (거짓 중단 없음)"
+    fi
+    rm -rf "$_c_tmp"
+  fi
+fi
+
 echo ""
 echo "════ lanes: $PASS passed · $FAIL failed ════"
 [ "$FAIL" -eq 0 ]

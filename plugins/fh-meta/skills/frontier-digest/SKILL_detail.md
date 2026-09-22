@@ -28,14 +28,52 @@ load: on-demand
 > fell back to **WebSearch**, and the 09-04 run measured what that does: 5/5 papers it returned were
 > REPEATs. Search sorts by *canonicity*, the export API by *submission date* — a search fallback is
 > a **recall channel, not a discovery channel**, and swapping it in silently converts «unrun» into
-> «nothing new» (`not found ≠ 0`). Order on 429:
-> 1. back off once (≥30s), retry the same query;
-> 2. still 429 → WebFetch the **date-sorted HTML listing** `https://arxiv.org/list/cs.SE/recent`
+> «nothing new» (`not found ≠ 0`).
+>
+> 🟢 **TRANSPORT ORDER INVERTED 2026-09-12 (operator decision) — the listing is now PRIMARY.**
+> Condition stated by the operator was *«if the errors keep coming»*, and they did, measurably:
+> `429` appears in the digest record on **09-09 · 09-10 · 09-11 · 09-12 — four consecutive days**,
+> past the `N≥3` bar twice over. Paying two failed calls plus a backoff every single day to reach
+> items that the listing reaches anyway is not a fallback, it is a toll. New order:
+> 1. **PRIMARY — WebFetch the date-sorted HTML listing** `https://arxiv.org/list/cs.SE/recent`
 >    (and `https://arxiv.org/list/cs.AI/recent` if the first is empty of agent/harness items), keep
->    items whose title/abstract match the three query phrases, cap 6 — same sort axis as the API;
-> 3. only if that also fails → HN-only, and the progress line says `arxiv FAILED (429)`, never `0 items`.
+>    items whose title/abstract match the three query phrases, cap 6. **Same sort axis as the API**
+>    (submission date) — that property is *why* this one is promotable and WebSearch is not.
+> 2. **FALLBACK — the export API query** (back off ≥30s between attempts). Kept on the ladder on
+>    purpose: if arXiv redesigns the listing markup, the channel must not disappear with it.
+> 3. only if both fail → HN-only, and the progress line says `arxiv FAILED (<which transports, why>)`,
+>    never `0 items`.
+>
+> 🟥 **What this costs, stated rather than discovered later.** The listing path has the **weaker
+> instrument** — its ID↔title pairing is the defect documented immediately below, and promoting it
+> moves that defect from the fallback onto the **main** path. Therefore the two rules below are no
+> longer conditional-on-being-in-fallback: **per-item `abs/{id}` re-resolution is a PRIMARY-path
+> requirement**, one fetch per shipped ID, and a title mismatch drops the item. That is a real
+> per-run cost increase (≈N extra fetches for N shipped items) and it is the price of the promotion,
+> not an oversight. The old order paid 2 failed calls + a backoff instead; this pays N verified reads.
+> 🟥 The progress line must now name **which transport produced the items** (`arxiv via listing` /
+> `arxiv via export-api`) — otherwise a reader cannot tell which instrument's limits apply to the run.
 > 🟥 WebSearch is **not** on this ladder. If a run used it anyway, the arxiv leg is reported as
 > `RECALL-ONLY (WebSearch)` and its items are excluded from the NEW/REPEAT count.
+>
+> 🟥 **On the listing path, do NOT pair ID and title by position — pair them inside one block
+> (measured 2026-09-12, this runner, and it is the phantom class this skill already has on record).**
+> The listing yielded **51 IDs and 50 titles**, so two parallel extractions drift partway down and
+> every pair after the drift point is wrong *while looking well-formed*. Concretely measured that run:
+> `2609.10550` was attached to *"When Passing Tests Hides Vulnerabilities"* by the positional parse,
+> but its own `abs` page is *"Optimizing AI Inference Across the Deployment Stack"* (2026-07-01);
+> `2609.11060` and `2609.11008` mispaired the same way. 3 items dropped, 7 verified, **0 shipped
+> unverified** — it was caught only because every shipped ID was re-resolved.
+> **Two rules, and the second is the floor:**
+> ① read each entry as **one unit** (the ID and the title that sit in the *same* list item), never as
+>   two ordered lists zipped together. A count mismatch between the lists is not a warning to
+>   reconcile — it is proof the zip is already wrong.
+> ② until ① is demonstrably what happened, **per-item `abs/{id}` re-resolution is MANDATORY on this
+>   path**, not optional — one fetch per shipped ID, confirming the title. Any ID whose `abs` title
+>   disagrees is **dropped**, never shipped with a note.
+> ⚠️ There is no hook here and none is possible: the parse happens inside the session that read the
+> page, so this is salience over a manual floor. The floor that actually held on 2026-09-12 was ② —
+> keep it even after ① looks solved (`[[feedback_anchor_can_be_decorative]]`).
 
 ### HackerNews (Algolia API)
 
@@ -107,7 +145,24 @@ URL returns 200 directly, so the leg no longer depends on redirect-following at 
 because the fetch path is not always `curl -L` (a WebFetch-based run does not follow redirects the same
 way). Second collection endpoint to churn, after GeekNews `/rss/news` (2026-06-20).
 
-Extract `"title":"..."` + `"slug":"issue-\d+"` pattern → URL: `https://www.deeplearning.ai/the-batch/{slug}/`. Max 5 items.
+🟥 **Pattern churned again (2026-09-11).** The page no longer embeds `"title":"..."`/`"slug":"issue-N"` JSON —
+HTTP 200, ~186 KB, **0 matches**, and the `/the-batch/issue-N` anchors carry no text. Third endpoint churn
+(GeekNews `/rss/news` 2026-06-20 · trailing-slash 308 2026-07-26 · this). Current shape, verified live:
+
+```bash
+curl -s --max-time 15 -L "https://www.deeplearning.ai/the-batch" \
+  | /usr/bin/grep -oE '<a [^>]*aria-label="[^"]+"[^>]*href="/the-batch/issue-[0-9]+"' \
+  | sed -E 's/.*aria-label="([^"]+)".*href="(\/the-batch\/issue-[0-9]+)".*/\1\t\2/' | head -5
+```
+
+`aria-label` = title · `href` = `/the-batch/issue-NNN` → URL `https://www.deeplearning.ai{href}`. Max 5 items.
+⚠️ **Count with `grep -o … | wc -l`, never `grep -c`.** The page is minified, so every anchor sits on
+one line and `-c` (which counts LINES) reports **1** where there are 5. Measured 2026-09-16 while
+re-verifying this very block — a leg that trusts `-c` silently caps the Batch count at one.
+🟥 **0 matches on a 200 is INSTRUMENT MISMATCH, never «Batch 0 items»** — report it as
+`Batch: UNMEASURED (pattern mismatch — HTTP 200, N bytes, 0 anchors)` and leave the leg out of the
+counts ([[feedback_not_found_is_not_zero_family]]). Calibrate: known-positive = the live page yields ≥1
+row today; known-negative = an empty body yields the UNMEASURED line, not `0`.
 
 ### GeekNews — news.hada.io (RSS)
 

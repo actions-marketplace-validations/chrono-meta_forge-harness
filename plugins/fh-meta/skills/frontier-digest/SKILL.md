@@ -72,7 +72,7 @@ Collect from five sources (bash per source in §Collection-Bash):
 | HackerNews | Algolia API `search_by_date` (date-sorted, never `/search`), score > 30, keyword-relevant | 15 items |
 | arxiv | export API, latest by submittedDate | 6 items |
 | TLDR AI | RSS, title + link | 5 items |
-| The Batch (deeplearning.ai) | HTML scraping, title + issue slug | 5 items |
+| The Batch (deeplearning.ai) | HTML scraping, `aria-label` + `/the-batch/issue-N` href (the JSON `slug` shape died 2026-09-11) | 5 items, or `UNMEASURED` |
 | GeekNews (news.hada.io) | Atom feed (`/rss/news` path), title + link, AI/agent/LLM-relevant | 5 items |
 
 Report progress: `📡 HN 15 items · arxiv 5 items · TLDR 5 items · Batch 5 items · GeekNews 5 items collected`
@@ -215,7 +215,7 @@ Present Step 4 menu options [1]–[5]. Do not skip to [5] silently — surface t
 ## Simplification Guards
 
 - Video Tier-3 probe fails (any of `yt-dlp` / `curl_cffi` / `ffmpeg` missing, or timedtext returns 429) → fall through to operator summary; never assume `yt-dlp` works
-- If 3+ arxiv queries fail (HTTP 429): back off once → WebFetch the date-sorted `arxiv.org/list/cs.SE/recent` listing → only then HN-only. Never substitute WebSearch (recall channel, 5/5 REPEATs measured 2026-09-04); report `arxiv FAILED (429)`, never `0 items`. Detail: `SKILL_detail.md §Execution form`
+- 🟢 **arxiv transport, inverted 2026-09-12 (operator decision, condition met: 429 on 09-09·10·11·12)**: the **date-sorted `arxiv.org/list/cs.SE/recent` listing is PRIMARY**; the export API is the **fallback**; HN-only only if both fail. Same sort axis (submission date) is why the listing is promotable and WebSearch is not. 🟥 Cost of the promotion, not an oversight: the listing's ID↔title pairing is the weaker instrument, so **per-item `abs/{id}` re-resolution is now a PRIMARY-path requirement** and the progress line must name which transport produced the items. Never substitute WebSearch (recall channel, 5/5 REPEATs measured 2026-09-04); report `arxiv FAILED (429)`, never `0 items`. 🟥 **On the listing path, pair ID↔title INSIDE one list entry, never by zipping two ordered lists — measured 2026-09-12: 51 IDs vs 50 titles, so pairs drift partway down and mispair while looking well-formed (3 items caught, 0 shipped). Until that is what happened, per-item `abs/{id}` re-resolution is MANDATORY and a title mismatch DROPS the item.** Detail: `SKILL_detail.md §Execution form`
 - On curl timeout, skip that item and continue with the rest
 - If synthesis result exceeds 400 characters, retain top 3 items and truncate the rest
 - Without `--save`, do not create files (conversation output only)

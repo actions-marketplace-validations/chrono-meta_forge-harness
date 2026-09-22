@@ -1,0 +1,223 @@
+# 발표 준비 하네스 — 표면 선언 (surface manifest)
+#
+# 🟥 이 파일이 «표면 목록»의 단일 소스다. 코드에 하드코딩하지 않는다 —
+#    챔버 런 #14 실측: 표면 목록이 코드에 박혀 있어서 같은 물건이 세 번 따로 지어졌다.
+# 🟥 선언된 표면이 디스크에 없으면 **UNMEASURED 다, 0 이 아니다**(레인 L3 가 판정).
+#
+# 축(axis)은 «그 표면이 무엇의 정본인가»다 — Jupytext 의 paired-notebook 에서 빌려왔다
+# (inputs=텍스트 정본 / outputs=ipynb 정본). 축을 안 가르면 문자열 28/28 통과하면서
+# 서식이 날아가는 사고가 난다(2026-08-18 실측).
+
+asset_family: "if(kakao)26 발표 준비"
+root: "."   # ← 발표 자산군의 루트. 상대경로 권장(레포 안에서 돌린다면 ".")
+
+canon_ledger: "CANON_LEDGER.md"      # 🚫 인용금지 · ⚠️ 조건필수의 산문 정본
+canon_terms:  "canon_terms.yaml"    # 그 산문의 기계 대응물 (L1 이 읽는다). 이 스크립트 위치 기준
+jargon_terms: "jargon_terms.yaml"   # 조어 선언 목록 (L5 가 읽는다 — 사람이 적고 기계는 집행만)
+
+# L8 이 읽는다 — 챔버 런 #15 배출분(장 사이 의존). 🟥 경로를 코드에 박지 않는다.
+interslide:
+  manuscript: manuscript                       # 원고 표면의 id (surfaces 목록 안)
+  builder: "../scripts/ifkakao_build_deck.py"  # 배선 정본(NOTE_MAP)
+
+surfaces:
+  - id: manuscript
+    path: "ifkakao26_deck_draft_v1.md"
+    kind: markdown
+    canonical_for: [발화 문자열, 장 구성]
+    unit_pattern: '^###\s+(S[0-9]+(?:-[a-z])?)\s*·'
+    speech_marker: "🗣"
+    spoken: true      # 대상 자신의 어휘: 이 표시가 여는 블록만 «실제 낭독»
+    retire_markers: ["🚫", "제거됨", "폐기"]     # 대상이 «스스로 죽었다»고 선언하는 어휘
+  # 🟥 2026-08-21 신설 — 도해 «생성기»를 표면으로 세운다. 그림 자체는 못 읽지만
+  #   그림을 그리는 **문자열 리터럴**은 읽힌다. 오늘 이 사각에서 두 건이 물었다
+  #   (「초록이 는 게 아닙니다」 · 도해 전면의 「계열」) — 눈으로 보기 전엔 아무 레인도 못 잡았다.
+  - id: fig_s9
+    path: "../scripts/gen_fig_s9.py"
+    kind: figure_source
+    canonical_for: [도해 문구]
+  - id: fig_s12
+    path: "../scripts/gen_fig_s12.py"
+    kind: figure_source
+    canonical_for: [도해 문구]
+  - id: fig_s13b
+    path: "../scripts/gen_fig_s13b.py"
+    kind: figure_source
+    canonical_for: [도해 문구]
+  # 🟥 2026-09-05 신설 — 타입 있는 도해 JSON(archify 스키마)을 표면으로 세운다. figure_source 처럼
+  #   그림 «소스»의 문자열이 L1/L5 에 잡히고, 추가로 L12 가 옆의 굽기 영수증(*.receipt.json,
+  #   diagram_from_json.py 가 쓴다)으로 «지금 JSON 의 그림인가 · validate 통과 · 해상도 · viewBox 폭»을 본다.
+  #   render 를 안 적으면 UNMEASURED(0 아님). 손으로 넣은 PNG(영수증 없음)도 UNMEASURED.
+  - id: fig_s44
+    path: "figures/s44_methods_make_gate.workflow.json"
+    kind: diagram_source
+    render: "figures/s44_methods_make_gate.png"
+    canonical_for: [도해 문구]
+  - id: wiring
+    path: "../scripts/ifkakao_build_deck.py"
+    kind: note_map
+    canonical_for: [슬라이드 배선]
+  - id: built_deck
+    path: "ifkakao26_slides_v7.5.pptx"
+    kind: pptx
+    canonical_for: []                            # 산출물 — 어떤 축의 정본도 아니다
+  - id: keynote
+    path: "ifkakao26_slides_v4.1.key"
+    kind: keynote
+    canonical_for: [서식, 레이아웃]              # 🟥 사람만 읽는 면. 제거 대상 아니라 요구사항
+  - id: tech_doc
+    path: "ifkakao26_technical_doc.md"
+    kind: markdown
+    canonical_for: [기술 서술]
+  - id: tech_doc_v2
+    path: "ifkakao26_technical_doc_v2.html"
+    kind: html
+    canonical_for: []
+  - id: qa_prep
+    path: "ifkakao26_qa_prep.md"
+    kind: markdown
+    canonical_for: [Q&A 응답]
+  - id: abstract
+    path: "ifkakao26_submission_abstract.md"
+    kind: markdown
+    canonical_for: [제출 초록]
+  - id: rehearsal
+    path: "ifkakao26_rehearsal_script.md"
+    kind: markdown
+    canonical_for: []
+    spoken: true            # 대본 전문이 낭독이다(🗣 표시 없이 산문 전체)
+  - id: timing
+    path: "ifkakao26_timing_dryrun_v1.md"
+    kind: markdown
+    canonical_for: [시간 배분]
+
+# L4 판정에서 빼는 단위 — 사유를 같이 적는다(빼는 것은 «통과»가 아니라 «미측정»이다)
+getput_skip_units:
+  - S5     # head/tail 분할 — 한 절이 두 슬라이드라 대조가 근사값 (왕복기 자신의 명시 한계)
+  - S15    # 동상
+  - S1     # 표지 인사: 원고 자수 0 이 설계다(speech_count 가 그렇게 적는다). 구조적 차이지 손실 아님
+
+pairs:                                  # 대조할 표면 쌍 (L2 단위-참조 정합)
+  - [manuscript, wiring]
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 장당 발화 속도·상한 — L6 이 읽는다. **사람이 고치는 자리다.**
+#
+# 🟥 문헌에는 «한 장 N초» 숫자가 없다. 「10~15분 집중력 한계」류는 Wilson & Korn(2007)이
+#    인용 사슬을 추적해 근거 부실을 보인 folk number 계열이다. 실증된 것은 Mayer 의
+#    segmenting principle — «잘게 끊어 주면 낫다»는 **방향**이지 숫자가 아니다.
+# ⇒ 그래서 아래 숫자는 문헌이 아니라 **이 코퍼스 실측**에서 왔다(2026-08-20, 45장 덱):
+#      발화 있는 39장 · 평균 28초 · 중앙값 25초
+#      분포가 **이봉(bimodal)** — 25초 이하 무리와 40초 이상 무리, 사이가 비었다.
+#      그래서 상한을 30/35/40 어디에 둬도 걸리는 장이 13/12/10 으로 거의 같다.
+#      ⇒ 숫자를 정교하게 고를 실익이 없다. HARD 는 «확실히 넘은 것»만 잡게 넉넉히 둔다.
+# ⚠️ **다른 발표에 그대로 쓰지 마라** — n=1 코퍼스다. 새 발표는 자기 분포를 먼저 재고
+#    (L6 이 평균·중앙값·이봉 여부를 출력한다) 그 다음 이 값을 고쳐라.
+# ⚠️ chars_per_sec 은 **이 발표자 1인의 통독 실측**이다. 발표자가 바뀌면 다시 잰다.
+speech_pacing:
+  chars_per_sec: [5.18, 5.35]   # 운영자 통독 실측 (공백 제외 한글 기준)
+  hard_sec: 45                  # 넘으면 «쪼개거나 줄여라» — 경고, 차단 아님
+  soft_sec: 30                  # 권고 대역
+  # 차단하지 않는 이유: 덱 빌드·원고 편집은 **되돌릴 수 있는 표면**이라 fail-closed 자리가
+  # 아니다(CLAUDE.md §Irreversibility Gates). 마감 직전에 막으면 사람은 원고를 고치는 대신
+  # **레인을 지운다** — 그게 게이트를 훈련으로 무력화하는 형태다.
+
+# ─────────────────────────────────────────────────────────────────────────────
+# L7 재생성 회수 — **생성면이 사람 편집을 삼켰나.**
+# 🟥 이 블록은 2026-08-21 사고에서 나왔다: 빌더가 발표자 노트를 전량 덮어써서 사람이 손으로
+#    쓴 발화 20곳이 소리 없이 사라졌다. 빌드 성공 · 원고↔빌드 대조 «원고대로» · 아무 검사도 안 잡음.
+# `human` 은 **사람이 만진 사본을 내보낸 것**이다(키노트 → pptx). 없으면 UNMEASURED —
+# 「내보내지 않았다」와 「삼킨 게 없다」는 다른 상태이고, 이 레인은 둘을 안 섞는다.
+regen_recovery:
+  generated: "ifkakao26_slides_v7.5.pptx"
+  human:     "../../../private/tmp/keynote_export.pptx"   # 없으면 UNMEASURED (경로는 그때그때)
+
+# ── L9 progression — «단계가 하나 빠지면 논지가 뒤집히는» 자리를 사람이 선언한다 ─────────
+# 🟥 선언이 없으면 이 레인은 아무것도 안 본다(NOT_CONFIGURED — 통과가 아니다).
+#    무엇이 «한 세트»인지는 판단이라 기계가 정하지 않는다. 기계는 선언을 집행만 한다.
+# 실사고: ① 좋아진다 → ② 그래도 남는다 → ③ 더 늘려도 안 된다 → ④ 입장을 바꾸면 보인다
+#         에서 ①이 화면에서 떨어졌고, 리뷰어가 논지를 «정반대로» 읽었다. 문장은 다 옳았다.
+progressions:
+  - id: escalation
+    why: "단계가 하나 빠지면 논지가 뒤집힌다"
+    screens: [p17, p18, p19, p20]     # 이 단계들이 놓이기로 한 «화면» 표면 id
+    steps:
+      - anchor: "좋아집니다"           # 화면 텍스트에서 찾을 문자열
+        why: "이 첫 칸이 빠지면 나머지가 반대 논지로 읽힌다"
+      - anchor: "그래도 남는"
+      - anchor: "더 늘려도"
+      - anchor: "입장을 바꾸면"
+
+# ── L12 diagram — 타입 JSON 도해의 굽기 정합 (2026-09-05) ─────────────────────────
+# 값의 근거: 장표 26.67in = 1920pt → 2× = 3840px. viewBox 폭은 archify 글자 배율을 정한다
+# (pt = unit × 1728/폭: 720 이면 라벨 29pt·부제 19pt, 덱 최소 18pt 충족 / 845 면 부제 16pt 미달).
+# 🟥 덱이 다르면 min_px 는 그 덱 폭의 2× 로, max_viewbox_w 는 그 덱 최소 글자로 다시 정한다.
+diagram:
+  min_px: 3840
+  max_viewbox_w: 720
+  min_pad: 0.02
+
+# ── L10 adjacent-dup — 인접 장이 같은 문장을 다시 읽나 ────────────────────────
+# 🟥 구조는 범용이고 **임계는 발표마다 다르다** — 그래서 갈라 놓는다.
+#    미기재면 계기가 «재기만 하고 판정 안 한다» 고 스스로 적는다(조용히 통과가 아니다).
+# 실측: 한 장을 두 프레임으로 쪼갤 때 뒤 프레임에 원본을 통째로 남겨 117자 중 82자(70%) 중복.
+adjacent_dup:
+  max_dup_chars: 40      # 인접 두 절의 중복 자수가 이보다 크면 낸다. 지우면 «측정만»
+
+
+# ── P1/P3 geometry — 넘길 때 튐 · 인접 어긋남 ─────────────────────────────────
+# 🟥 `baseline`(이전 판 pptx)을 주면 **편집 전/후 델타**로 돈다 — 「지금 몇 건이냐」가 아니라
+#    «내가 방금 뭘 어긋냈냐». P3 는 기저 오탐이 수십 건이라 절대 목록으로는 못 쓴다.
+geometry:
+  jitter_emu: 200000     # 이보다 큰 이동은 «의도한 이동»으로 보고 안 낸다 (1pt = 12,700)
+  align_emu:  63500      # 5pt. 이보다 큰 틈/겹침은 «의도한 여백»으로 본다
+  # baseline: "이전판.pptx"
+  # 🟥 «알고도 남긴 것»을 선언하는 자리 (SKILL §방법론 ⓕ). 안 적으면 다음 감사자가 다시
+  #    «발견»하고 «고친다» — 2026-09-10 에 실제로 그렇게 고쳤다가 되돌렸다.
+  #    면제는 «도형»이 아니라 «그 변화»에 걸린다: attrs 말고 다른 게 바뀌면 그대로 뜬다.
+  #    `why` 가 비면 면제가 아니라 **오류**다. 면제된 것은 «면제됨»으로 출력된다.
+  # intended:
+  #   - slides: [49, 50]
+  #     shapes: ["gate_bar_l", "gate_bar_r"]
+  #     attrs:  [x, cx]
+  #     why:    "격리 막대 얇음→두꺼움. 「격리가 세지는」 연출"
+
+# ── P4 attr-consistency — 덱 자신의 분포가 판정 기준 ──────────────────────────
+# 축 넷: dash(같은 점선 굵기) · algn(같은 줄 정렬) · mirror(좌우 대칭 크기) · echo(같은 문장)
+# ⚠️ «다르다»만 본다. «틀렸다»는 사람이 판정한다 — advisory 고정.
+attr_consistency:
+  mirror_tol_in: 0.4     # 거울 자리 허용 오차(인치). 덱 폭에 맞춰 다시 재라
+  min_echo_chars: 8      # 이보다 짧은 문장은 echo 축이 안 본다(라벨·번호 소음)
+  # axes: [dash, algn, mirror, echo]     # 일부만 돌리고 싶을 때
+  # intended:
+  #   - axis: mirror
+  #     slides: [6, 7]
+  #     why: "빌드 강조 교체 — 크기가 강조를 나른다"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# L15 font — 서체가 배포 템플릿이 정한 집합을 벗어났나 (2026-09-11 신설).
+#
+# 🟥 `template` 이 이 레인의 본체다. 그게 없으면 **마스터에 상속된 서체와 저자가 찍은 서체를
+#    구분할 수 없고**, 순진한 판정은 상속분을 위반으로 센다(실측 오탐 85건). 선언이 없으면
+#    레인은 판정을 «하지 않는» 게 아니라 «구분 못 한다»고 노트에 적는다.
+# 🟥 `allow` 를 비우면 template 의 slides/ 분포에서 자동 유도한다 — 「내 체크리스트가 아니라
+#    그 템플릿 자신의 분포가 기준」. 가족 이름만 적으면 굵기 변형(Bold/Light)이 함께 덮인다.
+# fonts:
+#   template: "../brand/official_template.pptx"   # 배포받은 원본 템플릿
+#   allow:                                        # 생략 가능 (template 에서 유도)
+#     - "Pretendard"
+#   intended:                                     # 「알고도 남긴 것」 — why 없으면 다음 감사자가 «고친다»
+#     - slides: [37]
+#       fonts:  ["Roboto Mono"]
+#       why:    "터미널 데모 — 비례 서체면 열 정렬이 무너진다"
+#
+# ── L15-b font-embed — 쓰는 서체를 덱이 «들고 다니나» (2026-09-21 신설) ──────────
+# 🟥 이 레인은 선언이 없어도 돈다. `presentation.xml` 의 `embeddedFont` 집합이
+#    `slides/` 가 부르는 서체 집합을 덮는지만 보므로, 기준이 덱 자신 안에 있다.
+# 🟥 **이 축은 «부재가 곧 결함»이다** — 임베드 0 은 UNMEASURED 가 아니라 FAIL 이다.
+#    다른 레인의 «부재 ↔ 0» 규율과 방향이 반대인 이유: 여기서 재는 것은 «측정할 수 있었나»가
+#    아니라 «덱이 무엇을 들고 다니나»이고, 아무것도 안 들고 다니는 것은 **잰 사실**이다.
+# ⚠️ 설치 여부 자체는 여전히 못 본다(파일 밖). 이 레인이 닫는 것은 «설치에 기대고 있나» 쪽이다.
+#   embed_exempt:                               # 면제 — 🟥 `why` 가 비면 «면제»가 아니라 «오류»다
+#     - fonts: ["Arial"]
+#       why:   "시스템 기본 서체 — 어느 PC에나 있다"

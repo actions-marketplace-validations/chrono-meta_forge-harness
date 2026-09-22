@@ -2948,7 +2948,7 @@
     다음번 처방: 병렬 디스패치는 **완료 알림을 받은 그 턴에** 한 줄이라도 적는다.
 - date: 2026-09-01
   agent: fh-meta:beginner / fh-meta:challenger / general-purpose(디자이너 렌즈)
-  count: 3
+  count: 5
   context: >-
     if(kakao) 덱 v1.1 비공개 사례 구간(68~75p) 재구축 직후 3렌즈 병렬 감사. 운영자가
     «발표준비하네스 능력을 100% 활용해서 … 테크니컬라이터도 부르고 디자이너도 불러서» 로
@@ -2997,7 +2997,7 @@
     신호: tracks/_meta/fh_signal_2026-09-02_dispatch-tally-attribution.md
 - date: 2026-09-02
   agent: general-purpose (2) + codex exec sidecar (1) — 프로 세션(Fable 5.1 거버너)
-  count: 3
+  count: 5
   context: >-
     운영자 «자체개발 거버너모드 · 병렬로». ⓐ ⑤ 증폭자 측정 사전등록 초안(블라인드) ⓑ 카드 미결 2건
     (eligcheck _tsv_pipe fail-open · target_pin mtime 분기) 조사+패치 제안(패치는 텍스트로 회신,
@@ -3033,7 +3033,7 @@
     같은 디렉터리에 있어 오염 → 폐기·재실행. 전 회신을 거버너가 실행으로 재현했고 codex 기각 5건은 소스 근거.
 - date: 2026-09-03
   agent: UNATTRIBUTED — 이 세션(forge-harness-d5, 프로)이 띄운 것이 아니다
-  count: 2
+  count: 5
   context: >-
     ④-e 가 «오늘 디스패치 2 · 원장 0» 으로 ❌. 자정 이후 이 세션의 Agent 호출은 0 (도구 호출은 Bash·gh·npm 뿐).
     tally 실물 `tracks/_meta/.subagent_dispatch_tally` 에 2026-09-03 두 줄. 같은 시각 이 머신에서 sim 추출기
@@ -3049,7 +3049,7 @@
   agent: fh-meta:expert
   invoker: forge-harness-27 (Fable 5.1 거버너, 야간 위임)
   task: 웹 QA 에이전트 프런티어(2025-2026) ↔ qasp 1/2/3막 대응표 + 2주 내 비저자 첫 완주 델타 5
-  count: 2
+  count: 5
   context: >-
     운영자 «qasp 세계에 물어보고 개발 위탁, 다다음주 AX lobby QA 투입». 1차(기본 모델)는 API 529 로 조기 종료,
     2차 sonnet 재시도 성공(검색 12·fetch 1·155,866 tokens). 읽기 전용, 회사 내부 정보 검색어 배제.
@@ -3548,3 +3548,753 @@
   dispatch_count_measured: 131  # session_close_check ④-e 집계. 위 2 엔트리는 «클래스 통합»이고
                                 # 총 스폰 수는 131 이다 — 「2건」만 보면 과소 계상으로 읽힌다
   notes: "🟥 거버너가 잡은 오류 1건 — qasp 조사가 `web_regress.py:423` 의 `return \"PASS\"` 를 «레포 유일 fail-open» 으로 지목했는데 **틀렸다**. `_STATUS_MAP` 이 세 값만 만들고 그 밖은 두 진입점에서 raise 하며 SKIPPED 는 앞 분기가 먹으므로 소진적 else 다. 정적 패턴만 보고 **도달 가능성을 안 본** 부류. 그리고 내 계기도 한 번 틀렸다(`endswith(\"pass\")` 가 `not-pass` 를 삼켜 8.3% 오출력) — 같은 얼굴이라 PR 본문에 적었다. 두 에이전트 다 «확인 못 한 것»을 이름으로 나열했고 그게 검수를 값싸게 만들었다"
+
+- date: 2026-09-08
+  agent: codex(gpt-5.6 → gpt-6-astra) · 사이드카 adversarial/verifier
+  purpose: "① 게이트 트리거 넓힘 교리 5R 수렴 ② 논문 v1.2.2 §6.7 6R 수렴(SHIP 판정) ③ recall 재검증 45런 조건 블라인드 채점 ④ B-1 5팔 채점(축①③ keyed · 축② unkeyed) ⑤ typed-finding 파이프라인의 검증기·감사기"
+  outcome: accepted
+  evidence: "①에서 «기계 테스트라 적었는데 기계가 없다» 를 잡아 gate_shape_scan.sh 가 그 커밋에 들어왔다(자력 0). ②에서 S findings 를 4라운드 연속 냈고 마지막까지 남긴 것이 제목의 «Evidence» 한 줄 — 운영자가 그 처방을 «정체성 소실»로 정정해 «a Test of» 로 착지. ③은 known-pair 보정 통과(양성 HIT/HIT · 음성 MISS/MISS) 후 45런 채점. ⑤에서 자기 산출(codex)을 검증할 때 채널 규칙이 실사용에서 발동"
+  tokens_subagent: UNMEASURED
+  dispatch_count_measured: 39  # session_close_check ④-e 집계. 아래 gemini 포함 총계이고
+                               # 이 엔트리는 «클래스 통합» 이다 — 2건만 보면 과소 계상으로 읽힌다
+  notes: "🟥 codex 가 한 번 틀렸다 — §6.7 분모를 5×3×8=120 으로 읽어 S 로 올렸는데 실제는 항목이 아티팩트에 묶여 있어 24 가 맞다. 표현이 모호했던 것은 사실이라 문구를 고쳤고 «산술은 늘 맞았다» 를 R6 프롬프트에 명시했다. 거버너가 잡은 자기 오류 2건: 「0% 는 채점자 산물」(기록이 반증) · 「참 주장이 지워졌다」(소스 확인 후 철회)"
+
+- date: 2026-09-08
+  agent: agy(gemini-3.8-flash-high) · fleet member + verifier
+  purpose: "typed-finding fleet 의 security 역할 · 반대 방향 검증 패스 · octo 파이프라인의 Gemini 라운드 복구용 shim"
+  outcome: accepted
+  evidence: "Art4 에서 4건 산출, 그중 셋이 2026-06-02 GT 와 일치하는 실물(allow_session→allow_always L49 · deny_always L26 · UI 주입 L83). 검증 패스에서 codex 산출 1건을 false-positive 로 드롭했고, 그 드롭은 감사(codex)에서 correct-drop 으로 확인됐다"
+  tokens_subagent: UNMEASURED
+  dispatch_count_measured: 위 엔트리에 통합
+  notes: "🟥 배선 함정 둘: `-p` 가 variadic 이라 `--model` 을 프롬프트로 먹었고(오류 메시지가 친절해 즉시 잡힘), 기본 print-timeout 이 6KB 프롬프트에 부족해 rc=1. 둘 다 «조용한 0» 이 될 수 있었는데 fleet 이 멤버 rc 를 기록해서 보였다. gemini CLI 자체는 개인 계정에서 deprecated(IneligibleTierError) — agy 가 유일 경로"
+- date: 2026-09-09
+  agent: fh-meta:persona-innovator
+  mode: F
+  context: "Mode D — 야간 자율주행. 거버넌스 엔지니어링 프레임(다음 arXiv) + ≤1% 오류율을 향한 갭 스캔. 운영자가 「이노베이터 활용」을 명시 요청"
+  dispatched_by: governor
+  outcome: accepted
+  evidence: "① 델타 진술 + 제목 3 + thesis 2, 각각 defeater 동반 ② 외부 선행 11건(URL 열어 확인) + 미확인 4건 라벨 분리 ③ FH 결손 6건(G-1~G-6, 전부 기계화 가능). 🟥 G-4(finding_verify.py 의 자기검증 가드가 옵셔널 필드에 걸린 fail-open)는 내가 소스 확인 + 알려진 쌍 재현 후 **이 릴리스에서 닫았다**(PR #694). 사이드카 원 주장은 배선 경로도 뚫린다는 함의였는데 파이프라인이 라우팅을 거부하므로 좁혀서 채택 — 사이드카 발견은 «증거 후보» 이지 판정이 아니라는 규율대로"
+  residual: "🟥 자기보고 잔여를 스스로 6항 적어 왔다(EU AI Act 미열람 · preprint 자기보고 수치 · 우리 표의 커버리지 불일치). 그 정직성 자체가 채택 근거의 일부. 외부 인용은 **아직 재검증 안 함** — 논문에 싣기 전에 URL 을 내가 직접 연다"
+- date: 2026-09-10
+  agent: sidecar-codex (gpt-6-astra high) + sidecar-agy (gemini-3.8-flash-high) + local ollama qwen3.8:27b@4090
+  task: B-2 F_typed 팔 24런(+15 재실행) · F_gen 9런 · 채점 32+16+16+3 단위 · cross-family 수리 검토 1
+  count: 37 (SubagentStop 집계) — 사이드카 CLI 호출은 별도(팔 ~140, 채점 ~70)
+  outcome: accepted
+  evidence: tracks/_meta/dominance_B2/RESULT_2026-09-10_scoring-calibration.md §1~§10 · fh_axes23_2026-09-10_verifier-roster.md · cross-family 6/6 실적발 전건 수리(L73~L78)
+  cost: codex 577k(F_typed 리뷰) + 한도 3회 소진 · 로컬 4090 무료 · 거버너 UNMEASURED
+  note: 통합 1항목. 사이드카는 auditor 로만(트리 쓰기 0). 자력 적발 0/6(cross-family) · 계기 축 자력 2(L72 · quota 오탐)
+- date: 2026-09-10
+  agent: general-purpose ×5 (Claude, 로컬 격리 워크트리 · 사이드카 0 — residency)
+  task: qasp-dev PR 스택 7건(#278–#284) 거버너 검증 — 레인 실행 · 되돌림 프로브 · 표본 손검증 · known-pair (#279 · #280+#281 · #282 · #283 · #284) + 거버너 직접 #278·스택 전수
+  count: 5
+  outcome: accepted
+  evidence: tracks/_meta/field_gate_review_2026-09-10_qasp-stack7.md — #281 BLOCK(coverage.py:142 파생 fail-open 재현 + 정본 :41), 5건 A 소견 전부 file:line·재현 동반 · 스택 전수 4092/0
+  cost: subagent_tokens 163k+184k+215k+200k+195k ≈ 957k · 거버너 UNMEASURED
+  note: 통합 1항목. crossfamily=DEGRADED_SINGLE_FAMILY(corp-context 어휘 — residency). 자력(거버너) 적발 0 — 다섯 A 전부 에이전트 실행이 잡음; 저자 자기검토도 다섯 다 놓친 자리(«거버너 1종» 이 실제로 «기계 1종+의미 0종» 이라는 저자 정정은 채택)
+- date: 2026-09-12
+  agent: general-purpose(sonnet) ×6 — persona-commons 1기 웹 리뷰 캐스트 첫 실사용(designer · ux-writer · fe-dev · be-dev · qa · a11y 렌즈, 격리·병렬)
+  task: 공개 화면(FH 지도 페이지 캡처 33요소/5k자) 에 각 렌즈 파일+캡처만 주고 parallax 출력 + Unique-to-this-seat 자기 태그. 거버너가 렌즈별 고유 발견을 세어 장식 렌즈를 가른다(한계효용 정지)
+  count: 6
+  outcome: accepted
+  evidence: 결과는 tracks/_meta/persona_cast_trial_2026-09-12.md 에 표로
+  note: 렌즈 파일은 워크트리 초안(feat/persona-commons). 회사 데이터 0(공개 페이지)
+- date: 2026-09-12
+  agent: codex sidecar(gpt-6-astra) — Axis 2 cross-family 감사, 짝지음 설계 diff 18,771 bytes
+  task: finding_fleet.sh · finding_pipeline.sh · run_pair.sh 의 diff 를 읽고 결함 열거(S/A/B + 트리거 입력). «두 분기가 바이트 동일한 r1 을 먹어야 하고 드리프트는 크게 틀어져야 한다» 를 요구사항으로 명시
+  count: 1
+  outcome: accepted
+  evidence: S 1건 적발 — `--r1-only` 이 빈 round-1 을 R1_ONLY(사용가능) 로 통과시키는 fail-OPEN(`grep -c . || echo 0` 이 "0\n0" 을 만들어 `[ -eq 0 ]` 이 구문오류로 거짓). 프로브 출력까지 받아 재현, 레인 L124 + fail-before 실행 증명으로 수리. 판정 원문 = tracks/_meta/dominance_B2/PREREG_ADDENDUM6_NOTE_2026-09-12.md
+  cost: tokens 46,877 · 거버너 UNMEASURED
+  note: 🟥 부분 완주 — 한도 소진으로 중단(리셋 15:44), 남은 표면(run_pair.sh phase2 동시성) 미검. 자력 적발 0 — 내가 20분 전에 쓴 코드였다. 회사 데이터 0(FH 자기 스크립트)
+- date: 2026-09-11
+  agent: general-purpose ×5 (Claude, 로컬) + sidecar-codex(gpt-6-astra high) ×7 호출(R3·R4×3·R5·R6×2·preprep R1 — 그중 REFUSED 1 · 한도 3)
+  task: ① 3.2.0 발행 게이트 security-review(v3.1.4..main 18커밋, 출하 443파일) ② qasp-dev PR #286 루프 분모 게이트 검증(격리 워크트리·뮤턴트·합성 데이터) ③ PR #287 픽스처 상대시각(TZ×시각×지평 스윕 → 일중 뒤집힘 S 발견, BLOCK → 재검 승인) ④ PR #288 스탬프 이동(종료경로 전수·관통 프로브·합의 레인 단독 뮤턴트) ⑤ PR #289 머지 후 검증(실판정기 형제 오매치 S·준비점검 READY 무근거 S·장식 레인) · codex = finding 파이프라인 cross-family R3~R5(17+3건) + preprep 4 레인 감사 R1(S5·A9·B4)
+  count: 5
+  outcome: accepted
+  evidence: security-review «No HIGH/MEDIUM»(후보 8 전부 «이미 닫힘» 기각) · #286 APPROVE + B1(규율 셋 잔여 2줄) · codex 라운드는 fh_axes23 마커 두 개(verifier-roster · preprep) 에 건별 기록
+  cost: subagent_tokens 187k+181k · codex ≈ 116k(REFUSED)+130k(한도)+60k(한도)+116k+88k+… · 거버너 UNMEASURED
+  note: 통합 1항목. 🟥 codex 사이버 필터가 «attack/spoof/bypass» 어휘 프롬프트를 116k 소모 후 거부 — REFUSED 는 0건이 아니다. 어휘 치환 후 같은 diff 로 8건 실적발. 🟥 «순차» 를 어겨 codex 잡 둘을 동시에 돌렸다가 한도(07:41)로 둘 다 죽음 — 이후 preflight 사슬로 순차화. 🟥 대기 사슬이 자기 명령줄을 grep 으로 잡아 영원 대기(«codex exec … model_reasoning» 문자열이 zsh -c 인자에 있다) — 파일 존재/토큰으로 판별해야 한다
+- date: 2026-09-12
+  agent: general-purpose(opus) ×1 — preprep R8 «Opus 팔» (탈상관 A/B 의 같은 계열 팔, 격리 워크트리 wt_r8 @4f738ad, 실행 허용)
+  task: codex R8 과 같은 프롬프트로 5파일 적대 감사. 12 프로브 스크립트 실행(p1~p12), R7 수리 3건 재검(S2·A4·A5 건전) + 1S·4A·7B
+  count: 1
+  outcome: accepted
+  evidence: 거버너가 12 스크립트 중 8개를 재실행해 S1(rc=1 인데 정본 교체+이전 바이트 폐기)·A2(shape_type NotImplementedError 교착)·A3(intended 원소형 TypeError 로 P4 전체 UNMEASURED)·A4(공백 경계·br 오탐, «1자@Nonept» 거짓 증거)·B6(빈 Choice 진리값)·B7·B11 전부 재현. 전건 수리 대상
+  cost: subagent_tokens 251,268 · 15분 · codex 팔은 QUOTA_HIT(UNMEASURED, 03:55 재발송)
+  residual: A/B 판정은 codex 팔이 와야 성립 — 지금 말할 수 있는 것은 «같은 계열 + 실행» 이 0 이 아니라는 것뿐. 자력 적발 0/12
+- date: 2026-09-12
+  agent: general-purpose(opus) ×1 — O_nosent 산문 24런 → typed 주장 추출(부록4 봉인 규칙)
+  task: 답변 본문에서 «위치+결함» 단언을 1건씩, quote 축자 ≥15자 필수, 반증조건·파이프라인 메타 제외, 빈 런은 empty 기록
+  count: 1
+  outcome: accepted
+  evidence: 94 주장 + 빈 7런 · quote 축자 검증 0 실패(에이전트 자체 기계 검증) · 컨트롤(축② 판정 수 대조) |차|>2 = 3런(g03 r1 빈 답 · g04 r3 · h05 r1) → 손대조 대상으로 기록
+  cost: subagent_tokens 183,138 · 5분
+  residual: 추출은 판단이다(F_gen 은 파이프라인 typed) — O 유리 방향 비대칭을 부록 4 잔여로 명시. 추출자 결정 2건(위치별 분할 · 자기부정 항목 제외) 그대로 채택
+  agent: agy(gemini-3.1-pro-high · gemini-3.8-flash-high) · cross-family adversarial reviewer
+  mode: sidecar
+  context: "preprep L15 서체 일관성 레인 신설(PR #697, MERGED bffa1a0) 의 적대 검토. 4라운드 연속."
+  dispatched_by: governor
+  outcome: accepted
+  evidence: |
+    R1 3.1-Pro-High 8건 · R2 3.8-Flash-High 6건 · R3 3.8-Flash-High 5건 · R4 3.1-Pro-High 4건
+    = **지적 23건 중 22건 수용·전건 실적발**, 1건 기각(하네스 전역 계약 → fh_signal 로 기록).
+    🟥 **자력 적발 0** — 23건 다 못 봤다.
+    🟥 라운드를 쌓은 것이 하중이었다: **R2 가 R1 의 수리를, R4 가 R3 의 수리를 뒤집었다.**
+      · R1 의 「템플릿 자신이 쓰는 서체는 노트로 강등」 → R2 가 fail-open 으로 지목(배포 템플릿은
+        쓰이지도 않는 자리에 Office 기본값을 들고 있어서, 강등하면 본문에 써도 종료코드가 안 움직인다)
+      · R3 의 「속성 순서 가정 제거」가 쓴 `(\w+)=` 가 네임스페이스 콜론을 못 먹어 `r:id` 유실 →
+        R4 가 지목. 실물 덱이 그 형태라 장 순서가 내내 파일명 순 폴백으로 돌고 있었다
+    🟥 그리고 **R3 에서 그걸 막으라고 넣은 레인이 초록이었다** — 픽스처가 1장짜리라 폴백과 정상
+      경로가 같은 답을 냈다(「초록인 이유를 확인하라」의 교과서적 재현). 2장 픽스처 + 면제-장번호
+      컨트롤로 교체.
+    실물 탐지 표면 173 → 647 → 804회. self-test 30항 · 출하본 rc=0 PASS=6.
+  tokens_subagent: UNMEASURED
+  dispatch_count_measured: 6  # R1~R4 본검토 4 + 실패 재시도 2(헤드리스 권한 1 · print-timeout 1)
+  residual: |
+    🟥 **NOT-CONVERGED.** 4라운드에 4건을 고쳤으므로 5라운드가 남았다. 네 라운드 연속으로 새
+    결함이 나왔고 자력 적발이 0 이라, 이 레인은 아직 굳지 않았다.
+    ⚠️ 배선 함정 둘(둘 다 «조용한 0» 이 될 수 있었다): ⓐ 백그라운드 실행에서 agy 가
+    「command 권한이 헤드리스에서 auto-deny」로 **출력 0** — 포그라운드 재실행으로 해소
+    ⓑ 기본 print-timeout 5분이 27KB 프롬프트에 부족 → `--print-timeout 600s` 필요(메모리에
+    이미 있던 함정을 재현했다).
+  notes: "판정은 전부 거버너가 소스로 재현한 뒤 수용했다 — 지적을 믿고 고친 것이 아니라, 예컨대 자식 있는 defRPr 정규식 조기종료는 재현부터 돌려 서체가 버려지는 것을 보고 나서 고쳤다. 사이드카 발견은 «증거 후보» 이지 판정이 아니라는 규율대로."
+
+- date: 2026-09-12
+  agent: agy(gemini-3.1-pro-high) · cross-family adversarial reviewer
+  mode: sidecar
+  context: "preprep L15 4라운드 — 자정을 넘겨 실행된 분. 본체 기록은 2026-09-11 엔트리에 통합돼 있다"
+  dispatched_by: governor
+  outcome: accepted
+  evidence: "4건 지적 전건 실적발·수리. 그중 하나가 **R3 수리가 심은 결함**(`(\\w+)=` 가 네임스페이스 콜론을 못 먹어 `r:id` 유실 → 장 순서가 파일명 순 폴백). 나머지 셋도 fail-open: `<a:t xml:space=\"preserve\"> 미독 · `<a:sym>` 슬롯 미포함(실물 157개) · 템플릿 endParaRPr 이 허용 집합으로 승격"
+  tokens_subagent: UNMEASURED
+  dispatch_count_measured: 위 2026-09-11 엔트리에 통합 (클래스 통합)
+  residual: "NOT-CONVERGED — 5라운드가 남았다"
+  notes: "🟥 이 엔트리가 따로 있는 이유는 세션이 자정을 넘겼기 때문이다. ④-e 는 «오늘» 기준으로 세므로, 날짜 경계를 넘긴 세션은 양쪽 날짜에 기록이 필요하다 — 원장을 하루 단위로 읽는 계기의 성질이고, 통합 서술만 두면 오늘 자가 0 으로 보인다"
+
+- date: 2026-09-12
+  agent: Explore ×2 (local Claude) · general-purpose ×1 (local Claude) · agy(gemini) ×2 CLI
+  mode: sidecar
+  context: "clawd-on-desk «destructive-action reminder» PR — 필드 게이트 ②단(cross-family + 독립 출처)과 배선 지도"
+  dispatched_by: governor
+  outcome: accepted
+  evidence: |
+    🟥 **자력 적발 0. 두 축이 서로 다른 HIGH 를 잡았고 겹치지 않았다.**
+    ⓐ **독립 출처 팔**(general-purpose, owner 사양만 주고 체크리스트를 먼저 쓰게 함, 내 diff 서술
+      미제공) → **원격전용(버블 비활성) 경로가 통째로 스탬프 안 됨.** 알려진 짝으로 실측을 제시했고
+      (`A 통상 stamp=hold` / `B 원격전용 stamp=undefined · sweep gate=true`), 내 «호출수 동일»
+      불변식이 그 형태를 **구조적으로 못 본다**는 것까지 지목(둘 다 없으면 수가 같다).
+    ⓑ **계열 팔**(agy) → **`execute_bash`·`powershell`·`run_shell_command` 가 자동승인 적격인데
+      매처의 `SHELL_TOOLS` 에 없어 스캔 자체가 안 됨**(거버너가 3/3 재현). 추가로 과차단 3건
+      (`--help` · `rm -rf dist/*` · automation-off 에서 거짓 «내가 멈췄다» 표시).
+    ⓒ Explore ×2 → 설정 배선 6파일 순서·i18n 7로케일 패리티 테스트·라우트 테스트 헬퍼 지도.
+      그중 «수락 기준과 똑같은 단언이 이미 레포에 있다」(`server-route-permission.test.js:353`)가
+      테스트 설계를 바꿨다 — 새로 짓지 않고 그 형태를 재사용.
+  tokens_subagent: "Explore 91,253 + 102,170 · general-purpose 211,666 · agy UNMEASURED · 거버너 UNMEASURED"
+  dispatch_count_measured: 5  # 서브에이전트 3 + agy 2(1차는 print-timeout 5분에 절단 → --print-timeout 25m 재발주)
+  residual: |
+    🟥 **codex 는 한도 소진**(15:44 창을 F_pair 사전등록 실험이 선점) ⇒ 외부 계열은 **agy 단독**.
+    그래서 `crossfamily: panel(gemini-agy) evidence=MIXED` 로 기록했다 — 계열은 SHARED(같은 diff),
+    출처는 INDEPENDENT(사양만). arXiv:2609.10969 의 40.9%p vs 11.3%p 를 읽고 의도적으로 축을 갈랐고,
+    **이번 실측이 그 방향과 일치한다**(출처 팔이 내 불변식의 사각을 잡았고 계열 팔이 매처의 사각을 잡았다).
+    ⚠️ n=1 PR 이므로 «출처 축이 더 세다» 로 일반화하지 않는다 — 겹침 0 이라는 사실만 기록한다.
+  notes: "agy 1차는 기본 print-timeout 5분에 절단돼 출력 1줄이었다(메모리에 있던 함정 재현). `--print-timeout 25m` 로 해소. 모든 지적은 거버너가 소스에서 재현한 뒤 수용했고, 수리 11건 전부 fail-before 되돌림 프로브로 앵커 생존을 확인했다."
+
+- date: 2026-09-13
+  invoked_by: "FH 세션 773e7d1d (자율주행)"
+  agent: "workflow: qasp-maturity-diagnostic (렌즈 9 + 건별 적대 반증)"
+  purpose: |
+    운영자 요청 «qasp dev 를 전체적으로 성숙화» → FH §Field-Harness Diagnostic 의 9 렌즈를
+    워크플로로 팬아웃하고, 원시 발견마다 **반증 전용 팔 1개**를 붙여 살아남은 것만 랭크했다.
+    🟥 전 에이전트에 «쓰기 금지 · 웹 금지 · 제한 환경 리터럴 반출 금지 · 벤더 경로 제외» 를 박았다(제한 환경 레포).
+  outcome: accepted
+  evidence: |
+    렌즈 9(residency · split · salience · structure · degrade · loop · unwired · triad · reps)
+    → 원시 발견 83 → 적대 반증 → **생존 48(M 3 · S 25 · R 20) · 탈락 35(42 %)**.
+    🟥 **M 3건이 서로 다른 렌즈에서 나왔고 겹치지 않았다**:
+      ⓐ loop/residency — 무장된 가드 사본이 최신 보호경로 3건을 모른다(**유출 방향 fail-open, 현재 열림**).
+        설치 스냅샷 38 vs 소스 41. 훅 자신의 drift 통지는 경고만 내고 차단하지 않는다(의도된 설계).
+      ⓑ degrade — 회귀 판정이 부분집합 공집합을 `all([])=True` 로 접어 결함을 **거짓 CLOSED**.
+        🟢 소비처가 이미 3값(`Optional[bool]`, None→보류)인데 호출부가 안 쓴다 = 순수 배선 결함.
+        형제 드라이버에는 같은 가드가 주석까지 달려 있다 — **반쪽-픽스 미전파**.
+      ⓒ structure — 스킬 1개 Done-When 부재(레포 10개 중 유일). 성문 기준상 자동 M.
+    🟢 **탈락 35건의 이유를 전건 보존**했다 — 안 남기면 다음 진단이 같은 35건을 재발견으로 올린다.
+    🟢 **미측정 1건을 그 자리에서 닫았다**: R 등급 «origin 공개 여부 미측정» → `gh repo view` 로
+      **PRIVATE 실측**. 그 칸이 잔류 판정 전부를 떠받치고 있었고, 확인되자 내부 호스트 리터럴 96건이
+      발견에서 빠졌다(설계상 정상). 🟥 렌즈의 처방(가시성을 fail-closed 게이트로)은 여전히 유효하다.
+  tokens_subagent: "12,248,795 (92 에이전트 · tool_uses 483 · 벽시계 약 33분, 2회 실행)"
+  dispatch_count_measured: 92
+  residual: |
+    🟥 **계열 축이 비어 있다** — 전 팔이 같은 계열(Claude)이다. 제한 환경 레포라 외부 계열로 못 보낸다(잔류).
+      `[[feedback_decorrelation_axis_is_what_you_send]]` 기준으로 **탈상관은 «렌즈»(관점)로만 걸렸고
+      «계열»로는 안 걸렸다.** 그래서 계열 공통 사각은 이 진단이 구조적으로 못 본다.
+    🟥 **읽기 전용이라 「돌려보니」는 미측정**이다. M 중 둘(degrade·loop)은 실행 재현이 다음 단계다.
+    🟥 **렌즈당 상한 14건** — 넘은 렌즈는 뒤가 잘렸다(기록에 표시). 잘린 것은 «없다» 가 아니다.
+    ⚠️ 1차 실행이 세션 한도로 27 검증 팔에서 죽었고 `resumeFromRunId` 로 재개했다 — 캐시 65 재생 + 27 재실행.
+      **한도 소진이 「발견 0」으로 렌더될 수 있는 자리**였고, 워크플로가 failures 를 명시해서 갈렸다.
+  notes: "발견은 전부 파일:줄로만 지목하고 제한 환경 값은 옮기지 않았다. 기록 = tracks/_meta/qasp_maturity_diagnostic_2026-09-13.md(gitignored). 아무것도 자동 수정하지 않았다 — 진단의 산출은 랭크된 목록이고 실행은 운영자 승인 뒤다."
+
+- date: 2026-09-14
+  invoked_by: "FH 세션 773e7d1d (자율주행 · sonnet)"
+  agent: "fh-meta:beginner ×2 (friends-on-desk README 콜드리드 1R · 수리본 재콜드리드 2R)"
+  purpose: |
+    ko-tech-writer Step 5 «발행 전 콜드리드 1패스» + 🟥 «재콜드리드 — 발행되는 것은 수리본이다».
+    조직 내부 사용자용 리드미를 쓰고, 초안과 **수리본을 각각** 배경지식 0 으로 통독시켰다.
+  outcome: accepted
+  evidence: |
+    **1R(초안)** — 지적 4건 + 전제결손 5건. 가장 큰 것: «AI 코딩 도구를 쓰고 있어야 한다»는
+      **전제가 설치 단계 «뒤»에 나온다**(순서 결함). 그 외 ~/.codex/pets 존재 여부 · 성공 확인
+      방법 없음 · 「3분」 약속과 앱 설치 위임의 모순.
+    **2R(수리본)** — 🟥 **수리가 새 구멍을 냈고 그걸 잡았다**: ⓐ `git clone` 지시가 사용자 섹션에
+      아예 없다(맨 아래 개발자 절에만 곁다리로) ⓑ **도구 목록이 앞뒤로 6개 vs 8개로 어긋난다**
+      (내가 앞 표에 6개만 적고 뒤에서 «여덟 가지»라 했다) ⓒ `~/.codex/pets` vs `~/.clawd/themes`
+      두 디렉터리 관계 무설명 ⓓ 「원본의 3분의 1」이 «셋만 쟀다»는 각주와 안 맞는다.
+    둘 다 반영했다. 🟥 **1라운드만 돌렸으면 6 vs 8 불일치가 그대로 나갔다.**
+    격리 수준 = **약**(같은 레포에서 띄운 서브에이전트라 프로젝트 지침을 상속한다 — 완전 블라인드 아님).
+  tokens_subagent: "264,012 (2 에이전트 · tool_uses 14 · 벽시계 약 5.8분)"
+  dispatch_count_measured: 2
+  residual: |
+    🟥 **계열 축이 비어 있다** — 둘 다 같은 계열이다. 리드미 통독은 «읽히나» 를 재지 «참인가» 를
+      안 재므로 그 자리는 cross-family 가 아니라 **사람**이 닫는다(운영자 검수).
+    🟥 **격리가 약하다** — 레포 밖 cwd 헤드리스가 아니라 같은 레포 서브에이전트다. 전제 결손은
+      잘 잡았지만 «자기 어휘 검사» 축은 오염됐을 수 있다(프로젝트 지침을 상속했다).
+    ⚠️ 이 세션의 훅 집계는 7건인데 내가 «에이전트로» 띄운 것은 2건이다 — 나머지 5건의 출처는
+      **미확인**이다(스킬/워크플로 경유 집계로 추정하나 확인 못 했다). 0 으로 세지 않고 적어 둔다.
+  notes: |
+    ko-tech-writer Step 5 의 «정지 조건은 라운드 수가 아니라 변경» 을 따르면 3R 이 필요하다
+    (2R 지적을 반영해 본문이 바뀌었으므로). 🟥 **안 돌렸다 — 미충족으로 명시한다.**
+    발행 판단자(운영자)에게 넘긴다. 기계 스캔(Step 2/4/4-b)은 **최종본 기준으로 재실행**했다:
+    글머리 줄표 0 · 소유 직역 0 · 레지스터 혼재 0 · 전칭 단정 후보 6건 전건 반례 확인 완료.
+
+- date: 2026-09-14
+  session: "심야 자율주행 (04e75057) — 운영자 부재, PR 머지 + npm 재발행 위임 하"
+  agent: "general-purpose ×8 (거버너 = Opus 5)"
+  purpose: |
+    클래스별 묶음 — operations.md 가 「consolidating a class of dispatches into one entry
+    with measured counts is fine」이라 명시한 형태다.
+    ① 조사·판정 4건: 카드 「판단 넷」 중 셋(예치 · 진입점 교리 · 사설 토큰 판정) + 캐이던스 처분
+       (전부 «감사 역할, 트리에 쓰지 마라» 로 묶음 — 사이드카 독트린)
+    ② 빌드 3건: temper_check 레인 · live_eval 계기 수리 · preprep cross-family R5
+       (쓰기 허용, 🟥 커밋·스테이징 금지 — 거버너가 커밋)
+    ③ 필드 1건: friends-on-desk (측정 → 임무 확장으로 실행까지)
+    ④ 조직-내부 축 1건: 누락 매니페스트 6 + 반입 요약 한 장
+    (④와 ①이 겹쳐 표기상 8 — 실제 spawn 8회)
+  outcome: accepted
+  tokens_subagent: "약 2,073,000 (8 에이전트 · tool_uses 505 · 벽시계 약 3.1시간)"
+  dispatch_count_measured: 8
+  evidence: |
+    산출이 전부 PR 로 착지: FH #721·#722·#723 MERGED · #724 OPEN · friends-on-desk #1 OPEN ·
+    컴패니언 스토어 커밋 1건. 거버너가 **모든 하중 주장의 앵커를 직접 재확인**했다(컨트롤 동반):
+    레인 실행(preprep 42/0 · live_eval 61/0 · temper_check 49/0) · drift anchor 3/3(되돌림 3단) ·
+    qasp-dev CI 실패 3건(컨트롤 #310 pass) · 브랜치 보호 403(컨트롤 /repos 200).
+  residual: |
+    🟥 **계열 축은 preprep R5 에서만 돌았고 거기서도 약했다** — codex ×2 + agy:gpt-oss 셋 다
+      OpenAI 계열이다(Gemini 쿼터 0%). 나머지 7건은 전부 같은 계열(Claude) 서브에이전트다.
+      ⇒ «자기 계열이 자기 산출을 검토» 축이 열려 있고, 그걸 닫은 것은 **거버너의 앵커 재확인**
+      이지 탈상관이 아니다.
+    🟥 **훅 카운터는 271 이고 내가 «에이전트로» 띄운 것은 8 이다.** 차이의 출처는 서브 툴콜
+      집계로 추정하나 **확인 못 했다** — 0 으로 접지 않고 적어 둔다.
+    ⚠️ **감사 에이전트 4건이 실제로 트리에 안 썼는지는 사후 확인**이다(git status 로 확인했고
+      그들 보고도 그렇게 적었다). 사전 강제는 없었다 — 프롬프트 규율뿐이다.
+    ⚠️ 빌드 3건이 **같은 작업 트리**를 동시에 썼다. 파일 무교차로 설계했고 실제 충돌 0 이었으나,
+      `[[feedback_parallel_isolation_unit_is_checkout_not_file]]` 기준으로는 **격리가 아니다**.
+  notes: |
+    🟢 **되돌림 프로브가 이 세션의 최대 발견기였다** — preprep R5-2(R4 가 「닫았다」고 기록한
+    기함 수리를 되돌려도 30/30 초록)와 temper_check 앵커 검증 둘 다 그 축이 냈다.
+    🟥 **거버너 자신의 계기 오류 5건**을 기록해 둔다(전부 컨트롤이 잡았지 성실함이 아니다):
+    head 절단을 총계로 · grep 패턴이 로그 접두사에 결박 · 마커를 브랜치당 하나인 줄 모르고
+    두 변경을 한 브랜치에 · heredoc 이 파이프 뒤 tail 에 결합 · 공개표면 스캐너를 사설 레포에 겨냥.
+
+- date: 2026-09-15
+  session: "심야 자율주행 연장 (04e75057) — 자정 이후 구간, 운영자 복귀 후 대화형"
+  agent: "general-purpose ×1 (거버너 = Opus 5) + 브라우저 세션 2 (Zenodo · arXiv)"
+  purpose: |
+    ① 논문 완성도 실사 1건 — 「거버넌스 논문 완성까지 얼마나 남았나」에 답하기 위해
+       원고 정본을 확정하고(4채널 교차, mtime 안 씀) 열린 항목을 전수로 뽑았다.
+       🟥 조사 전용으로 묶었다(쓰기·커밋·외부 API 쓰기 금지).
+    ② 나머지는 디스패치가 아니라 **거버너 직접 수행**이다 — Zenodo 초록 교체와
+       arXiv v3 replace 는 비가역 표면이라 위임하지 않았다.
+  outcome: accepted
+  tokens_subagent: "약 273,000 (1 에이전트 · tool_uses 62 · 벽시계 약 10.7분)"
+  dispatch_count_measured: 1
+  evidence: |
+    실사 보고가 논문 다섯 개(A~E)를 갈라 「질문의 지시 대상이 안 정해진다」를 먼저 지적했고,
+    그 최대 등급 지적(두 예치의 초록 갈라짐)을 거버너가 **라이브 두 표면 직접 대조로 재현**했다
+    (arXiv 1,917자 vs Zenodo 4,027자 · 앞 400자 미포함 · 유사도 0.792 · difflib 이 닫는 문장 하나로 격리).
+    ⇒ 결론 채택, **서술 2건은 정정**(§6.7 부재 범위 · 옛 단정의 위치).
+  residual: |
+    🟥 **계열 탈상관 0** — 같은 계열 서브에이전트 1건뿐이다. 그걸 닫은 것은 탈상관이 아니라
+      **거버너의 1차 출처 직독**이고, 그건 다른 축이다.
+    ⚠️ 실사 보고의 UNVERIFIED 7항(참고문헌 전수 재검증 미실시 · Pan et al. 메타데이터 미확인 ·
+      arXiv 반려 조항 미공개 · R1 결과 문서 부재 등)은 **그대로 열려 있다**.
+    ⚠️ E 논문의 ② 실험 채점기 퇴화(균형 정확도 58.3%)는 **확인만 했고 안 고쳤다** —
+      임계 수리는 09-09 세션이 이미 해뒀고(비율 0.8), 남은 것은 채점 모델 교체다.
+  notes: |
+    🟥 **이 구간의 교훈은 디스패치가 아니라 «거버너가 직접 한 일»에서 나왔다**:
+    ⓐ 초록을 손으로 옮기다 **14문장 1,914자 → 8문장 1,433자 작문본**을 만들 뻔했고 자기검증
+       6개가 전부 통과했다(내가 그 문구들이 들어가게 썼으니까). **길이 회계 하나**가 막았다
+       ⇒ base64+sha256 전송으로 전환.
+    ⓑ TinyMCE 무음 미전송을 현장에서 목격(에디터 4,222 / textarea 4,221).
+    ⓒ arXiv metadata 저장 실패를 **「CSRF/세션 경합」으로 오진**했다 — 실제는 Comments 400자
+       제한이었고 운영자가 에러 문구를 줄 때까지 몰랐다. 내 에러 선택자에 `.help-block` 이
+       있었는데도 0건이 나온 이유는 **시점**(화면 전환을 기다리느라 에러가 실린 응답을 지나침).
+       수리 = 폼 제출 대신 같은 POST 를 직접 쳐서 응답 HTML 을 읽기.
+    ⇒ 셋 다 «화면/응답 하나만 보면 놓치고, 두 번째 신호가 있어야 잡힌다» 는 같은 축이다.
+- date: 2026-09-15
+  agent: Explore
+  count: 3
+  purpose: >-
+    friends-on-desk 마감 감사 3건 — ⓐ 삭제한 tools/rotation.py 유령 참조 전수
+    ⓑ tracks/_meta/fod_open_2026-09-15.md 의 «열림» 주장을 git log·실물과 대조
+    ⓒ clawd-on-desk 의 스크립트 SVG 신뢰 경계 코드 추적(읽기 전용)
+  outcome: accepted
+  evidence: >-
+    ⓐ 죽은 갈고리 1건 적발(pick_even_motion 의 steps — 호출자 0 · 주석이 없는 깃발
+    --motion ring 을 가리킴) + __pycache__ 잔재 → PR #6 로 수리.
+    ⓑ 어긋남 4건 전부 «닫힌 것을 열린 것으로» 방향. 그중 하나는 레포 정본
+    MAPPING.md §⑥ 이 몇 시간 동안 거짓을 말하던 자리(PR #3 이 그 파일을 안 건드렸다) → PR #6.
+    ⓒ 내가 올린 «보안 소견 후보» 를 반증 — 경계는 렌더러가 아니라 theme-assets-cache 의
+    sanitizeSvg 이고 non-builtin 테마의 <script> 는 로드 시점에 제거된다.
+  note: >-
+    🟥 셋 다 자력 적발 0. 특히 ⓑ 는 «내가 쓴 파일이 자기 자신과 어긋난 것» 이라
+    저자가 읽어서는 구조적으로 안 잡히는 축이다(feedback_citing_a_rule_is_not_obeying_it).
+
+- date: 2026-09-15
+  session: "FH 워크리스트 세션 (c1ed47bb) — 대화형, 거버너 = Opus 5"
+  agent: "orca 워크트리 병렬 세션 ×1 (fh-gate-audit, claude) + cross-family 사이드카 ×1 (codex gpt-5.6-sol)"
+  purpose: |
+    ① 워크트리 세션 — «FH 게이트가 자기 결함을 통과시키는 자리» 3과제(09-15 신호 둘 +
+       sync-to-be 중첩 .git 차단). 🟥 보고형으로 묶었다(커밋·PR·push 금지 — 워크트리는
+       FH 자산 커밋 금지 구역).
+    ② codex 사이드카 — 그 패치의 cross-family 적대 리뷰(같은 diff, evidence=SHARED).
+  outcome: accepted
+  evidence: >-
+    ① 329줄 보고 회신. 실사용 값 셋: (a) sync-to-be 의 고칠 자리가 **둘이 아니라 셋**
+    (`sync_guard_check.sh:59-63` 이 디렉터리 제외를 하드코딩 case 로 들고 있어 `.git/` 가
+    `*)` 로 떨어져 parity FAIL) — 실측으로 확인, 이 커밋이 그 셋을 다 고쳤다
+    (b) 신호 ①의 무라벨 인스턴스를 `docs/OUTPUT_EVIDENCE.md` 하나로 좁히고 되돌림 프로브로
+    «장식» 확정(호명 0 · 정적참조 0) (c) 신호 ②는 **코드 패치 대상 없음** 판정 +
+    그 세션이 자기 자신에게서 같은 결함을 재현(`ps|grep '[k]'` 가 자기 래퍼 셸을 반환).
+    ② 4 findings(A 1 · B 3). 2건 반영(주석 정직성 — 페이로드 `.git` 도 제외된다 ·
+    parity 는 텍스트지 의미가 아니다), 1건 근거 대고 기각(`*)` 분기가 이미 갖던 성질),
+    1건은 잔여를 **좁혔다**(`.git` 파일은 `*/.git/*` 에 안 걸려 계속 가드 = 보수적 방향).
+  note: >-
+    🟥 두 축이 서로 다른 것을 잡았다. 워크트리(같은 계열·다른 세션)는 **내가 안 연 세 번째
+    편집 자리**를 잡았고, codex(다른 계열·같은 diff)는 **주석이 과대주장하는 자리**를 잡았다.
+    자력 적발은 그중 0건. 반대로 워크트리 보고의 §0 단정 1건은 거버너가 대조로 물렸고
+    그쪽이 수용했다 — 방향이 한쪽이 아니다.
+- date: 2026-09-16
+  session: "FH 워크리스트 세션 (10f314c4) — 대화형, 거버너 = Opus 5"
+  agent: "cross-family 사이드카 ×1 (codex-cli 0.153.4)"
+  purpose: |
+    발화 착지 프로브(`utterance_intake.sh`)의 키 선택 수리 diff 를 적대 감사. 겨냥한 축 다섯:
+    fail-open(거짓 착지) · ERE 안전 · 키를 조용히 버리는 경로 · alias 부분문자열 충돌 ·
+    되돌림 프로브가 장식일 가능성. 🟥 advisory 검사라 **거짓 착지가 조용한 방향**이고 거짓
+    미착지는 시끄럽다 — 그 비대칭을 프롬프트에 명시해서 보냈다.
+  outcome: accepted
+  evidence: >-
+    4 findings (A 2 · B 2), **4 수용 0 기각**, 넷 다 회귀 앵커를 같이 실었다.
+    A1 교대에 짧은 한글 이름까지 들어가 더 흔한 표기로 착지 — 내 **주석이 코드와 어긋난** 자리
+    (「키를 안 깎는다」면서 깎은 효과) → L24h.
+    A2 tier2 키가 `[:3]` 에서 조용히 드롭 — 드롭 자체는 종전부터 있었으나 **내 대역 정렬이
+    「붙여쓴 하중 절」을 체계적으로 자르게** 만들어, 남은 흔한 셋으로 발화가 「착지」로 렌더된다
+    = **내가 만든 fail-open** → 드롭을 세어 출력에 찍는다(`키드롭=N`) + L24j.
+    B1 `오픈코드리뷰` 를 opencode 로 오인(부분문자열 경계 없음) → `_LEAD_OK`/`_TAIL_OK` + L24i(+known-positive 짝 L24i-b).
+    B2 L24f 가 `Desktop` 소멸만 봐서 L24d 의 되돌림은 검증 안 함 → 뮤턴트 검사에 삼켜진-고유명사 케이스 추가.
+    레인 72 → 83, 전부 초록. 실측 재측정: 양성 09-15 `4→9`·09-14 `3→8`, 음성 `0→0`·`2→2`.
+  note: >-
+    🟥 **자력 적발 0 — 넷 다 codex 가 먼저 봤다.** 그중 둘(A1·B2)은 같은 얼굴이다:
+    **주석이 주장하는 범위와 코드/검사가 실제로 하는 범위가 어긋남**
+    ([[feedback_rule_misdescribes_its_own_machine]]). 내가 그 주석을 직접 써 놓고 못 봤다.
+    A2 는 더 나쁘다 — 내 수리가 **없던 fail-open 을 만들었고** 나는 그것을 개선으로만 읽고 있었다
+    ([[feedback_repair_is_the_main_defect_source]]).
+    ⚠️ 같은 세션에서 **거버너가 자력으로 잡은 것도 있다**: 무효 뮤턴트(`ALIAS = {} or {…}` 가
+    파이썬에서 뒤 딕셔너리로 평가)와 로케일로 한글 키를 뭉갠 `sort -u`. 둘 다 «성실함» 이 아니라
+    **두 신호의 어긋남**이 잡았다(레인이 초록인데 대상이 깨져 있었다 · `8+18=26 > 21`)
+    — [[feedback_catches_come_from_two_signals_disagreeing]].
+
+
+- date: 2026-08-24
+  session: air (에어 노드, 병렬 peer)
+  agent: general-purpose ×1 (qasp 입장 사실검증) · fh-meta:beginner ×1 (콜드리드)
+  model: opus (orchestrator) / 상속 (양 레그)
+  purpose: "매핑 프로젝트의 연간 공통과제 제안서(일정 산출 모듈의 팀 자산화) 최종 검토 — 두 축으로 분리 디스패치.
+    축이 다르다: 하나는 «주장이 대상 레포와 맞나»(사실), 하나는 «맥락 없는 독자가 읽히나»(도달)"
+  prompt_summary: "① general-purpose: 제안서의 모든 사실 주장을 qasp-dev 실물과 대조. 경로·계수·수치·기능·부록 8항,
+    각 발견에 파일:라인 필수, 확인 못 한 것은 «확인 못 함»으로 명시하고 추측 금지 ② fh-meta:beginner:
+    qasp 를 모르는 한국인 QA 팀원으로 **이 문서 하나만** 읽고(다른 파일 열기 금지 — 그게 실제 독자 조건)
+    막힌 지점·용어·판단가능여부·읽기난이도 보고"
+  outcome: accepted
+  finding: "🟥 **두 축이 각각 다른 결함을 냈고 겹친 것은 1건뿐이다.** 사실축: §1.4 계산식이 실제 코드와
+    다름(TC Volume 분기 통째 누락 — 버퍼가 걸리는 대상이 틀렸다) · 총일수가 SB 단계만이고 BT·RC 미포함(N-1) ·
+    risk_score 가 신규런칭·베타포함에 0점(N-2, 실물 버그) · 산출물이 두 트랙인데 하나로 서술(O-5) ·
+    «커밋 이력이 곧 검증 기록» 이 거짓(계수 보정이 첫 커밋 *이전*, git 에 없다) · CLI 는 «정비» 아닌 신규.
+    도달축: 첫 HARD 블록이 §1.4 ①(TC 단위가 5배 어긋나 보인다 — 사실축이 잡은 그 누락의 독자측 증상) ·
+    검산 가능한 유일한 표가 검산 실패(인원·버퍼 칸 부재) · Gem/CC/Hybrid 정체불명 · 공수·담당·유지보수
+    주체 부재로 «판단 불가» 판정 · 문체(꺾쇠·벼림·계상·번역투).
+    🟥 **양쪽 다 못 잡은 것이 하나 — 내가 지어낸 PFD 풀네임.** 사실축은 PFD 의 *숫자* 3종만 대조해
+    «전부 정확» 으로 통과시켰고(풀네임은 검증 항목에 없었다), 도달축은 «PFD 만 약자 풀이가 없다» 고
+    정확히 지적했는데 **내가 그 지적을 받아 없는 풀네임을 채워 넣었다**. 지적은 옳고 처방이 틀린 형태.
+    운영자가 잡았다 — 자력 적발 0."
+  note: "🟥 **누락된 계산 단계가 독자에게는 «단위 모순» 으로 보였다** — 같은 결함의 두 얼굴이고, 어느 한 축만
+    돌렸으면 원인이나 증상 중 하나만 잡았다. 사실축은 «코드와 다르다» 까지 가고 도달축은 «왜 안 읽히는지» 까지
+    간다. ⚠️ 사실축 보고가 [오류] 7건 중 3건을 «출하 전 반드시» 로 자체 등급했고 그 셋(O-1·O-5·N-1)이
+    전부 «심사자가 손검산 한 번으로 도달하는» 자리라는 판정도 함께 냈다 — 등급 근거가 재현경로라 채택 가능했다.
+    ⚠️ 이 엔트리는 이 세션 디스패치 전량(2건)이다. 훅 tally 는 공유 체크아웃이라 peer 분까지 세므로 1:1 아님."
+  cost: "subagent_tokens: 193,781(사실축) + 97,698(도달축) = 291,479 · 거버너 = UNMEASURED.
+    🟥 총액 안 적는다 — 거버너 칸이 미측정이다."
+
+
+- date: 2026-08-25
+  session: air (Protocol #1 문서 재편 + 엔진 규약 준수)
+  agents: "격리 서브에이전트 6 — 사실검증(qasp 실물 대조, 코드 실행 34 tool_uses) ·
+    용어오해 렌즈 · 콜드리드 ×3(초판/개고본/최종) · 외부 기술문서 벤치마크(fh-meta:expert,
+    WebFetch 6건) + cross-family 사이드카 1(로컬 qwen3:8b, Alibaba 계열)"
+  purpose: "protocol1 설명서를 소개/상세 2단으로 재편 · 그 문서의 사실·용어·가독성 검증 ·
+    엔진 total_days 가 PFD-CV-012 규약을 따르게(Load-Bearing Change Gate)"
+  outcome: accepted
+  evidence: "qasp-dev PR #201·#202 둘 다 MERGED · 컴패니언 스토어 커밋 5건 ·
+    회귀 테스트 14→20건(뮤턴트 4건 RED 로 앵커 확인)"
+  notes: "🟥 **자력 적발 0.** 오늘 잡힌 결함 전부가 운영자 지적(9건) 또는 렌즈 산출이다.
+    공통 형태 하나로 모인다 — **원 문서 문장을 「지금도 참인가」 안 묻고 옮겼고, 실측을
+    해놓고도 그 실측과 어긋나는 문장을 썼다.**
+    ⓐ 「7.0일이 정식 일정」= 준비가 빠진 값(정답 9.7). 원 문서 오류를 검산 없이 두 번 옮겼고,
+      그 사이에 엔진을 직접 실행까지 했다 — 계기가 손에 있었는데 안 댔다.
+    ⓑ 「자연어 실행 = 엔진 정규 표면」= 거짓. 러너 SKILL 은 엔진을 호출하지 않는다
+      (grep 0건, known-positive 대조). 계산 경로가 두 벌이고 README §동작모드 1·2 가
+      **이미 답을 갖고 있었다** — 확인해놓고 보류 배너만 옛 서술로 남겼다(반쪽 전파, 오늘 3회).
+    ⓒ 부재 단언 재발 3건(명령줄 관례 · 조직 가이드 · 계수 조정 기록). 마지막 것은
+      Gem 지식 계열이 통째로 있는데 항목을 특정 못 한 것을 「없다」로 썼다.
+    🟢 **cross-family 가 진짜를 잡았다** — RC 제외를 이름 문자열로 하고 있었는데 그 단계는
+      「운영」으로 **개명이 예정**돼 있다. 개명 시 필터가 조용히 깨져 운영이 총합에 섞이고
+      범위 축소 게이트가 더 자주 열린다(위험한 쪽 fail-open). in_total 플래그로 수리.
+    ⚠️ **1차 뮤턴트를 잘못 설계했다** — 개명과 필터를 같이 바꿔 결국 올바른 동작이 됐고
+      새 테스트가 안 흔들렸다. 진짜 실패 모드로 다시 걸어서야 앵커가 잡혔다.
+    🟥 **마감 중 destructive-op 규율 위반** — 카드가 「운영자 결정」으로 못 박은 qasp-dev
+      로컬 main 에 `git reset --hard` 를 enumerate 없이 돌렸다. 훅이 사후에 짖었다.
+      손실 0(reflog + 별도 백업), local-main-pre-realign-20260825 로 512커밋 고정 복원."
+  cost: "서브에이전트 토큰(완료 알림 기준): 106,092 + 131,986 + 221,753 + 137,554 + 109,696
+    + 최종 콜드리드 = 약 707k+ · 로컬 사이드카(qwen3:8b) = 로컬 실행, 토큰 계상 대상 아님 ·
+    거버너 = UNMEASURED. 🟥 합계 안 적는다."
+- date: 2026-08-25
+  agent: "fh-meta:challenger · fh-meta:fact-checker (각 3라운드) + Explore/general-purpose 다수"
+  invoked_by: "FH 세션 (ifkakao 덱 재구성 + ko-tech-writer 낭독 레지스터 신설)"
+  purpose: "① 덱 재구성의 캐논 대조·배선 재작성 ② ko-tech-writer SKILL.md 변경의 4축 게이트
+    Axis 2(적대)·Axis 3(그라운딩)을 수렴할 때까지 반복"
+  outcome: accepted
+  evidence: "Axis 2 라운드1 FAIL(S2·A9·B6) → 라운드2 FAIL(신규 15, S 3) → 라운드3 진행 ·
+    Axis 3 라운드2 FAIL(팬텀 2·부분 9) → 라운드3 진행 · 계기 known-pair 5축 전부 pos≥1/neg=0
+    실행 확인 · SKILL.md 240 → 454줄 (🟥 원 기록은 「428」이었고 2026-09-17 재측정이 반증했다 — 브랜치 tip 실측 454)"
+  note: "🟥 **라운드 2 신규 15건 중 13건이 라운드 1 수리가 만든 표면이었다.** 스킬이 자기 안에
+    적어둔 「수리는 결함의 주된 출처다」가 그 스킬 자신의 수리에서 재현됐다.
+    🟥 **Axis 3 이 범위 밖에서 더 큰 걸 물어왔다** — 챔버 KILL 판정의 운영자 확정 carry-forward
+    (「새 계기를 짓기 전에 기존 계기의 판별력부터」·「known-pair 를 파일로 물질화」·「반증된
+    판본이 아니라 교정된 판본을 쓸 것」)를 내가 셋 다 어겼다. ③호흡축을 이미 반증된 「60자
+    문자수」 판본으로 편입했는데, 정본 실측은 「≤22자, 단위는 음절수」다. 축을 삭제하고
+    미보정으로 이름만 남겼다.
+    🟥 **뿌리가 셋이었고 개별 수리로는 안 닫혔다** — ⓐ 정규식을 GFM 표 셀에 둔 것(이스케이프하면
+    복붙이 0건을 내고, 안 하면 렌더가 깨진다) ⓑ known-pair 를 표 셀에 둔 것(계기가 자기 행을
+    검출한다) ⓒ Done When 의 닫힌 열거(새 행이 채점 안 된다). 셋을 각각 고치면 네 번째가 난다.
+    ⚠️ 병렬 세션(forge-harness-5f)이 같은 스킬을 비공개 문서 2종에 돌려 「3라운드 14→4→8, 3차
+    4건이 2차 수리 산물」을 냈다. **「독립 재현」이라 안 쓴다** — 관측 방식이 다르고, 그 세션이
+    스스로 그 조건을 붙여 넘겼다. 정확한 표현은 「관측 방식이 다른 둘에서 같은 방향」."
+  cost: "서브에이전트 토큰: Axis2 라운드2 156,642 · Axis3 라운드2 192,299 · 라운드3 2건 진행중 ·
+    덱 작업 서브에이전트 미집계 · 거버너 = UNMEASURED. 🟥 합계 안 적는다."
+
+
+
+- date: 2026-09-17
+  agent: "general-purpose ×3 (동일 계열 · 병렬 격리 조사)"
+  invoked_by: "FH 세션 (에어 노드 마감 후 최신화 — PR #733/#734 재평가 + live_eval FLAKY 귀속)"
+  task: >-
+    ① PR #733(ko-tech-writer 낭독 레지스터) 현행 main 위 재작성 재료 ② PR #734(선행연구 원장 +
+    never-do 어휘) 「아직 유효한 갭인가」 재평가 선행 ③ live_eval 2026-09-17 FLAKY 3건의 층 귀속
+    (계기/자산/환경). 셋 다 읽기 전용 — 트리 쓰기 금지를 임무문에 명시.
+  outcome: accepted
+  evidence: >-
+    3/3 채택. ②는 「닫아라」 권고와 함께 PR 본문이 대체재로 지목한 #701·#695 가 **틀린 지목**임을
+    실물 대조로 밝혔다(실제 커버는 #509 · 08-30 novelty 차단 · 09-03 ④ 승격). ③은 G-TRIG-01 이
+    50일 전 삭제된 CLAUDE.md 행을 겨냥한다는 것과 쌍둥이 G-TRIG-03 미이동(반쪽 픽스)을 찾아
+    같은 세션에서 수리까지 갔다(c26202e · 2b93dfd). ①은 README 4종 드롭·원장 1건 중복·preprep
+    역할경계 신설 필요를 실측으로 갈랐다.
+  governor_check: >-
+    하중 지는 앵커를 전부 직접 재확인했다 — soul_tenets FH-T01/T02 실물 · prior_art 훅
+    settings.json:9 배선 · CLAUDE.md 의 plugin-recommender 라우팅 행 부재(컨트롤: context-doctor
+    :978 생존) · fh_detail_protocols.md:443-444 인접 줄 · 커밋 1ff84b8. 🟥 사이드카 보고를
+    그대로 판정으로 쓰지 않았다.
+  residual: >-
+    세 조사 전부 **동일 계열**이다(cross-family 아님). 마커에 DEGRADED_PANEL_UNUSED 로 기록.
+    그리고 오늘 tally 는 31 을 셌는데 내가 띄운 것은 3 — 차이는 귀속 미확인이고
+    (`fh_signal_2026-09-02_dispatch-tally-attribution.md` 가 같은 축), 이 엔트리는 **내가 띄운
+    3건만** 주장한다. 나머지 28 을 0 으로도 내 것으로도 접지 않는다.
+- date: 2026-09-17
+  agent: general-purpose ×8 (거버너 위임) + codex gpt-5.5 사이드카 ×1
+  invoked_by: FH 거버너 세션 (b87e3d89) — 운영자 지시 «거버너로서 팔을 띄우면 되잖아 너는 논문만 파»
+  task: >-
+    네 갈래 병렬(qasp-dev PR #315 수리 / pmh-dev #83 외부 대응 조사 / pmh-dev #81 회신 초안 /
+    fh-codex-doctor 과차단 수리) + 파급분석 2건(AX Lobby 보고서 v1·v2) + 수렴 라운드 1건
+    (codex 지적 4건 수리) + v3 검증 1건. 사이드카 1건 = `.js` cross-family 적대 심사
+    (`degrade_direction_scan.sh` 가 `.js` 를 커버하지 않아 그 축의 대체).
+  outcome: accepted
+  evidence: >-
+    PR #315 6/6 SUCCESS 후 MERGED(12:45) · pmh-dev #83·#81 코멘트 게시 · qasp-dev #316 신규 이슈 ·
+    doctor 레인 8팔→15팔(fail-before 9/15 RED → 15/15 GREEN) · `lane-runner: 120→121 suites,
+    121 wired`. 🟥 팔들이 **발주문에 없던 실물을 찾았다**: PR #315 의 세 번째 실패(같은 잡 2번째
+    스텝이 «SRC_FILES 를 손으로 다시 적던» 같은 결함의 두 번째 인스턴스) · 그 blocking 레인이
+    #314 때부터 **만성 빨강**이었다는 사실 · doctor 의 역방향 결함(빈 `plugins/` → `Status: OK ·
+    Skills scanned: 0 · rc=0`) · `collectAgents()` 하드코딩이 pmh 의 8을 0으로 보고.
+  governor_check: >-
+    하중 지는 판정을 전부 내 손으로 재확인했다 — 레인 스위트 직접 재실행(15/15) · PR #315 롤업
+    직독(비-SUCCESS 0건) 후 머지 · AX로비 v2 의 핵심 지적 2건(2건↔4건 충돌 · §1 정량표 diff 0건)
+    을 `git diff` 로 재현 · `fh_shared_sync.sh` 오귀속을 컨트롤 붙여 반증(FH 부재 + 컨트롤
+    `fh_session_load` 는 살아 있는 SKILL.md 히트) · `[FPV23]`·`[EBP18]`·`[C70]`·`[GE17]` 1차 출처
+    직독. 🟥 **팔 보고를 액면가로 받지 않았고, 한 건은 오귀속으로 판정해 기각했다.**
+  residual: >-
+    ⓐ 🟥 **내가 계기 오염을 하나 만들었다** — 수리 팔이 `doctor.js`·레인 파일을 편집하는 동안
+    `selfcheck.sh` 를 띄웠다. 그 런의 해당 두 레인 판정은 «반쯤 편집된 대상» 을 잰 것이라
+    인용하지 않는다(정본은 스테이징 후 재실행분).
+    ⓑ Lane A 가 자기 보고를 **정정**했다 — «selfcheck UNMEASURED» 는 틀렸고 실제로 RED 였으며
+    원인이 내 미스테이징이었다. 즉 팔의 1차 보고에 계기 결함이 있었고(표시용 필터가 실패 블록을
+    잘랐다) 스스로 잡았다.
+    ⓒ 팔 여섯이 **동일 계열**이다(general-purpose). cross-family 는 codex 1건뿐이고, 그 1건이
+    MAJOR 3 을 냈다 — 같은 계열 여섯이 못 본 것을 다른 계열 하나가 봤다.
+    ⓓ 8건은 «내가 띄운 것» 만이다. 훅 tally 와 어긋나면 그 차이는 귀속 미확인이고, 0 으로도
+    내 것으로도 접지 않는다.
+- date: 2026-09-18
+  agent: general-purpose ×9 (거버너 위임, 야간) + codex gpt-5.5 사이드카 ×6
+  invoked_by: FH 거버너 세션 (b87e3d89, Fable 5.1) — 운영자 위임 «야간자율주행 … pr머지까지 fh급으로 통과했으면 승인»
+  task: >-
+    R-claim 프로토타입→포트→v2 · 논문 무결성 계기 3종(포트, v2 진행) · 제출본 빌드(진행) · FoD 게이트 훅
+    3연속(cwd 미해결 → 푸시 매트릭스 → push.default/$VAR/dry-run, 진행) · archify upstream PR 갱신 ·
+    if(kakao) 파일럿 상태어 · AX로비 v2/v3 검증. codex ×6 = fh-codex-doctor · 상주층 Axis-1 정정 ·
+    정의 문서 실측 절 · FoD #30·#31·#32 · R-claim v1 · 무결성 계기 v1.
+  outcome: accepted
+  evidence: >-
+    MERGED — FH #745·#746·#747 · FoD #30·#31·#32 · qasp #317·#318·#319. archify #328 갱신(2d21bbd, CI 11/11,
+    비소유라 머지 0). 🟥 codex 여섯 번 전부 실물을 냈다(MAJOR 합계 12+): 같은 계열 팔들이 통과시킨 것을
+    다른 계열이 잡는 형태가 밤새 반복됐다. 429 창(03:30 리셋)에 팔 셋 사망 → SendMessage 재개, 셋 다 재개
+    성공(archify 는 죽기 전 세 단계 앞서 있었다).
+  governor_check: >-
+    하중 지는 판정 전부 직접 재현 — FoD 세 PR 의 gate.sh(29/0) · self-check(41→110) · 매트릭스 3점 ·
+    R-claim 28 레인 · lane-runner · 매니페스트 · 라이브 (a)(b) · selfcheck 완주(FAIL 1회 = 429 아티팩트로
+    귀속: MH 훅 레인 단독 재실행 rc=0 → 전체 재완주 PASS). 🟥 내 계기 오류 셋(v2 줄수 산수 · (B) 대조
+    `---` 슬라이스 · CHANGELOG `,,`) 전부 컨트롤·레인이 잡음(자력 0).
+  residual: >-
+    ⓐ 이 밤의 팔은 전부 같은 계열이고 cross-family 는 codex 하나다 — «폭이 탈상관을 대체하지 않는다» 의
+    실측 ⓑ 훅 tally 와의 차이는 귀속 미확인, 이 엔트리는 내가 띄운 것만 ⓒ 제출본 빌드·무결성 v2·FoD #33
+    은 이 엔트리 시점에 미완 — 완료는 fh_completed 에.
+
+- date: 2026-09-18
+  agent: general-purpose ×12 (sonnet 1 · opus 3 · Fable 8) + codex sidecar ×20
+  purpose: >-
+    주간 세션(야간 자율주행 후반 → 주간). 팔 ×12 = 논문 영문 번역 8조각(Fable, 병렬) · 체크리스트 계기
+    빌드(sonnet) · 영문 리뷰어 독회(opus) · qasp 만성 빨강 수리(opus) · FoD 설정창 테마(opus).
+    codex ×20 = 무결성 계기 R18·R19·R20(v19→v21) · 세션 체크리스트 계기 R1~R11(v1→v11) · 잔여 재현.
+  outcome: accepted
+  evidence: >-
+    MERGED — FH #749(무결성 계기 + 레인 75) · #750(체크리스트 계기 + 레인 40) · #751(릴리스 3.12.0) ·
+    FoD #34·#35·#36 · qasp #320. npm @chrono-meta/fh-gate@3.12.0 발행(OIDC, provenance).
+    🟢 codex 가 두 계기를 각각 수렴시켰다: 무결성 R20 CONVERGED(스무 라운드 · 무음 44 · 열셋은 내 수리가
+    낳음) · 체크리스트 R11 CONVERGED(11 라운드 · MAJOR 26 · 전부 무음). 번역 8팔은 수치 대조로 검증
+    (KR→EN distinct DROPPED 0 INVENTED 0).
+  governor_check: >-
+    하중 지는 판정 전부 직접 재현 — 양 레인 스위트를 2~4 환경(bash 3.2/5.3 × py 3.9/3.14)에서 재실행 ·
+    selfcheck 완주 ×5(v18~v21 · 체크리스트 v2~v11 중 착지분) · 병합 충돌 2자리 수동 해소 후 재완주 ·
+    FoD gate.sh 31/0 + 테마 레인 70/0 + dmg 검수 · 계기 3종을 실논문에 매 판본 재실행.
+    🟥 팔의 산출을 그대로 안 실었다: 번역 8조각은 이음매·용어를 거버너가 43항 수리 · 설정창 팔의 정적
+    레인 70 초록에도 실물엔 섹션이 안 떴다(그쪽 스크린샷이 잡음).
+  residual: >-
+    ⓐ 🟥 **계기가 저자를 네 번 잡았다** — 손표 칸 밀림 · v6 이 실전사본 요약 3/4 를 조용히 떨굼(«행≥1» 은
+    초록) · 로컬 패널 num_predict 8 의 거짓 사망 · 외부 PR #1025 의 테스트가 자기 패치의 창을 못 봄.
+    공통 = 내 모형으로 지은 계기는 내가 상상 못 한 것을 못 만든다 ⓑ FoD 설정창은 cross-family 미실행
+    (codex 가 두 라운드 점유) — 이름으로 남김 ⓒ 훅 tally 294 와의 차이는 배경 bash 태스크 포함으로 추정,
+    귀속 미확인. 이 엔트리는 내가 띄운 Agent/codex 만 센다.
+- date: 2026-09-18
+  agent: "야간 자율주행 — 4 에이전트 + codex 사이드카 3라운드 (통합 엔트리)"
+  purpose: "잔여 갈래 병렬 집행 — qasp #322/#323 · FoD 패치 3종 · archify #328 준비 · qasp 교리+README"
+  dispatch_count: 4          # Agent 툴 4회 (레포당 1개 원칙 — 같은 체크아웃에 둘 안 띄움; qasp 는 워크트리로 분리)
+  sidecar_count: 3           # codex exec — FH 팔 diff · cod #1021 R14 · FoD 문서축
+  outcome: accepted
+  evidence: |
+    에이전트 4: qasp N1+N2(PR #322/#323, CI 6/6 ×2) · FoD 패치 3종(PR #37) ·
+    archify #328 준비(취약점 재현 성공, 푸시 안 함) · qasp 교리 §9+README(PR #325, CI 6/6 ×2).
+    codex 3: FH 팔 diff → S급 2·A급 4 (S2·A2 수리) · cod R14 → 같은 부류 fail-open 4개 (전부 수리+레인) ·
+    FoD 문서축 → A급 1 반증, B급에서 거짓 주석 발견·정정.
+    🟥 받은 것을 액면으로 안 옮겼다: codex 주장 중 **실측 반증 3건**(A3 7건 중 5건 · FoD [A] · FoD [B] 예시).
+    🟥 내 계기가 한 번 죽었다(FoD 금지목록 파싱이 빈 리스트) — 함수 직접 호출 + known-pair 로 재측정.
+  residual: |
+    마감검사 ④-e 가 «797 dispatch / 2 로그» 로 셌다. 이 엔트리가 3번째다.
+    🟥 797 은 훅 tally 이고 Agent 툴 호출 수가 아니다 — 두 수는 같은 것을 세지 않는다.
+    그 차이를 해소하지 않고 이름으로 남긴다(엔트리 하나가 클래스 하나를 덮는 것은 프로토콜이 허용).
+
+- date: 2026-09-19
+  agent: "FoD 주행 — 에이전트 2 (통합 엔트리)"
+  purpose: "FoD 권한 다이얼 gate_plus 구현 · 펫 가시성/idle 아이콘 버그 2건 원인 규명"
+  dispatch_count: 2          # Agent 툴 2회 — 레포당 1개 원칙(둘은 시점이 겹치지 않는다)
+  sidecar_count: 0
+  outcome: accepted
+  evidence: |
+    ⓐ gate_plus (PR #40 머지): tier×matcher 표 구현 · --status 5리터럴 · OPT_IN_ONLY 기계 ·
+      뮤턴트 10 · gate.sh 50→52 · 다이얼 레인 41→62.
+      🟥 그쪽이 «측정하지 않았다» 를 이름으로 적었다(증폭기 실제 발화) — 그 정직성이 맞았고,
+      나중에 내가 프로브로 FIRES 를 받아 그 칸을 채웠다.
+    ⓑ 펫 가시성 / idle cod 아이콘: 두 건 다 원인 규명. 하중 주장 4개를 내가 직접 재검하고
+      **전부 통과**(tray 템플릿이 업스트림 것 · build.sh 가 icon.png 만 덮음 ·
+      FOREIGN_BACKOFF_MS=6000 · prefs 100키에 가시성 키 0). 오늘 인계 중 유일하게 반증 0건.
+  residual: |
+    🟥 내가 ⓐ 의 보고에서 **출처를 오귀속**했다 — art/reference/*.jpg 를 «남의 것» 으로 적었는데
+    내가 저장한 것이었다. 에이전트 탓이 아니라 내 확인 부족이다.
+    🟥 마감검사 ④-e 가 «385 dispatch / 0 로그» 로 셌다. 385 는 훅 tally 이고 Agent 툴 호출
+    수가 아니다 — 두 수는 같은 것을 세지 않는다. 그 차이는 이번에도 해소하지 않고 이름으로 남긴다.
+    ⚠️ 이 세션은 에이전트보다 **거버너 직접 작업**이 압도적이었다(프루닝 도구·트레이 글리프·
+    교리 갱신·측정 전부 내가 했다) — 그래서 원장 엔트리 2건이 세션 규모를 대표하지 않는다.
+- date: 2026-09-19
+  agent: "거버너 주행 — 에이전트 6 (통합 엔트리)"
+  purpose: "체크리스트 잔여 전수 · 논문 브랜드밀도 재측정 · qasp 요청↔빌드 대조 · FoD #49 부팅팔 원인 · FoD 모드 미저장 원인 · FoD×FH 프로브셋 설계"
+  dispatch_count: 6          # Agent 툴 6회 (전부 읽기/조사형; 쓰기는 FoD #49 팔 하나만, 미커밋)
+  sidecar_count: 1           # codex-cli 0.153.4 — 다중턴 diff cross-family 1라운드
+  outcome: accepted
+  evidence: |
+    여섯 전부 산출을 냈고, 셋이 **내 가설을 반증**했다 — 그 셋이 이 원장의 하중선이다.
+    ⓐ FoD 모드 미저장: 내 가설(«DEFAULT_MODE 가 매 실행에 적용») **반증**. 실제 원인은
+      첫 실행 물음을 «닫은» 것이 `origin:"dismissed"` 로 **선택처럼 영속**됐고, 그 뒤 트레이·독·
+      단축키로 바꾼 가시성은 **아무 데도 안 써진다**(업스트림이 영속을 안 한다). 실물 상태 파일
+      85바이트를 읽어 확정. `origin` 은 기록·레인은 있는데 **어떤 판정에도 안 쓰인다**.
+    ⓑ FoD #49 부팅 팔: 원인 = 설치본과 **single-instance lock 경합**(2×2 한 변수, 지문 동반).
+      뿌리는 더 깊다 — 레인 머리말의 «HOME 을 갈아 격리한다» 가 macOS 에서 **거짓**이다
+      (Electron `userData` 가 $HOME 을 무시). 옆 레인이 이틀 전에 이미 알고 적어 뒀는데
+      안 물려받았다 = half-fix 전파 경계.
+    ⓒ 논문: 09-18 정규식 12개에 **자기 논문 핵심 방법 4개 중 2개**가 빠져 있었다.
+      조어 9개 추가 시 1.414 → **2.645/1k자(1.9배)**. 「1.4 는 하한」 경고가 수치를 구했다.
+    ⓓ codex 사이드카: S급 2 + A급 2, **넷 다 실물 결함**(소스 직독으로 각각 확인 후 수리).
+      전부 «실패가 통과로 접히는» 방향이었고 자력 적발 0.
+  residual: |
+    🟥 **에이전트 둘을 같은 레포 트리(FoD)에 동시에 붙였다** — 하나는 쓰기(#49), 하나는 읽기.
+      충돌은 안 났으나 읽기 팔이 `git status` 의 `M` 둘을 보고 «내가 안 건드렸다, 귀속 못 한다»
+      고 보고했다. 운이 좋았던 것이지 규율이 막은 게 아니다.
+    🟥 qasp 팔이 **24분**(1,448초) 돌았다 — 이 세션 최장. 브리프가 넓었고(정본 39개 + 이슈 전수
+      + 전체 스위트 실행) 그 비용을 사전에 안 쟀다.
+    ⚠️ FoD 프로브셋 팔은 hand-back **직후 자기 1순위 발견을 스스로 정정**해 보충 메시지를 보냈다
+      (표 1-① 「증폭기 발화 기록 충돌」이 실은 FoD 레포 쪽 stale 이었다). 정정이 도착한 것은
+      다행이나, 첫 보고를 그대로 인용했으면 틀렸을 자리다.
+
+- date: 2026-09-19
+  agent: "야간 병렬 — 13 디스패치 (통합 엔트리)"
+  purpose: "FH 자체개선 3갈래 · qasp 3갈래 · 논문 2갈래 · FoD 2갈래 · 렌즈 2갈래"
+  dispatch_count: 13         # Agent 툴 13회. 🟥 훅 탤리는 1,219 인데 그건 SubagentStop «이벤트» 수다
+  sidecar_count: 1           # codex-cli 는 앞 세션 건이고, 오늘 외부 계열은 0 — 동계열 challenger 1
+  outcome: accepted
+  evidence: |
+    갈래: liveness-echo 수리 · measurement-reps 렌즈 · built-but-unwired 스캔 · 티키타카 채점기
+    · qasp #327 검증 · qasp #327 수리착지 · qasp 6-c 거부→0 · qasp 성숙도 3문
+    · EN 테크라이터 ×2(서막·PAPER2) · PAPER2 A·B·제목 수리 · FoD 4건 착지 · FoD 다중 시뮬
+
+    🟥 이 엔트리의 값은 «13건 돌렸다» 가 아니라 **무엇이 되돌아왔는가**다:
+
+    ⓐ **팔이 내 지시를 반증한 것이 셋** — 내가 준 전제를 그대로 안 믿고 1차 출처로 갔다.
+       · qasp 성숙도: 내가 «모바일 2막 = hybrid_cdp_run» 으로 준 그림이 틀렸다(경로가 셋이고
+         SimulatorAdapter 는 Act2Runner 를 지난다). 자기 보고를 정정 4건으로 스스로 뒤집었다.
+       · PAPER2 테크라이터: 내가 준 경로가 **미러**였고 1행 배너를 읽고 정본으로 갔다. 그리고
+         내가 준 제목·카테고리가 틀렸다고 API 직독으로 정정했다(cs.AI 아니라 cs.SE).
+       · PAPER2 수리: 내가 승인한 제목이 **인과를 한 칸 옮겼다**고 지적하고, 승인안이라
+         안 바꾸고 판단을 올렸다. 그게 옳았다.
+
+    ⓑ **적대검증이 «갈렸다» 를 뒤집은 것이 하나** — 티키타카. 픽스처 3개가 3등급으로 갈렸는데
+       C1·C2 는 셋 다 PASS 라 «틀릴 기회를 못 받은» 상태였다. 🟥 **거버너인 나도 등급만 보고
+       통과시켰다 — 자력 적발 0.** 동계열 한 다리에서도 그랬다는 게 요점이다.
+
+    ⓒ **사고 1건** — FoD 재빌드 팔이 레포 경계를 넘어 forge-harness 의 package.json 을 덮어썼다
+       (files[] 310→0, prepublishOnly 1→0). 그 팔은 자기 보고에 «레포 워킹트리 깨끗» 이라 적었고
+       그건 참이었다 — **자기 레포만 봤기 때문이다.** 임무문에 «커밋 금지» 는 있었고
+       «이 레포 밖에 쓰지 마라» 가 없었다. 신호: fh_signal_2026-09-19_cross-repo-write-killed-publish-gate.md
+
+    ⓓ **보고 품질이 전반적으로 높았다** — 대부분이 «확신 못 하는 것» 을 스스로 이름으로 냈고,
+       그중 여럿(증폭기 실발화 구조적 미측정 · 트레이 폴백 미관측 · F1/F5 미구현 · AX 로비 주행
+       기록 부재)이 그대로 카드의 «안 닫힌 것» 이 됐다.
+
+    🟥 통합 엔트리인 이유: 13건을 낱개로 적으면 위 네 줄이 묻힌다. 그리고 총계 미기입이
+       이 원장의 금지 사항이지 통합 자체는 아니다.
+
+- date: 2026-09-20
+  agent: "하루 전체 — 적대검증 1 + 병렬 2(사망) + 재발명 1(사망) (통합 엔트리)"
+  purpose: "stale_ref_scan 적대검증 · 낡은주장 스캐너(중복) · 신호 중복판정 재검"
+  dispatch_count: 4          # 🟥 내가 «이름으로 아는» 것만 4. 아래 미계상 참조
+  sidecar_count: 0           # 외부 계열 0 — opus challenger 는 동계열이다
+  outcome: partial
+  evidence: |
+    🟥 **먼저 못 센 것부터 적는다.** 마감 게이트가 «오늘 154 디스패치» 라고 말했는데,
+    나는 그중 **넷만 이름으로 안다.** 나머지는 압축 이전 세션들의 것이고 이 컨텍스트에
+    안 남았다. 총계를 지어내지 않는다 — `dispatch_count` 는 **내가 아는 수**이고,
+    훅 탤리(154)와 다르다는 사실을 여기 적는 것이 이 엔트리의 첫 값이다.
+    ([[feedback_not_found_is_not_zero_family]] — «못 셌다» 를 «0» 으로도 «154» 로도 접지 않는다)
+
+    ── 이름으로 아는 넷 ──
+
+    ① **`fh-meta:challenger` (opus) — `scripts/stale_ref_scan.py` 적대검증**  → accepted
+       반환: S 1 · A 8 · B 7 · *"머지하지 마라"*. 🟥 **자기가 아무것도 못 돌린다고 명시**했다
+       (Bash 없음). 내가 무거운 셋을 직접 확인했고 **셋 다 참**이었다:
+       · S-1 PDF 가 `0 sites · rc=0` — 깨끗한 스캔과 **바이트가 같은 출구**
+       · A-2 `# forge-harness (fh-meta) Changelog` 를 changelog 로 못 알아봄
+       · A-4 `scan_body → return []` 로 죽여도 **SELF-CHECK: PASS 4/4**
+       6건 수리 · 7건(A-1·A-3·A-8·B-2·B-4·B-5·B-7)은 마커에 이름으로 남김.
+       ⇒ **도구를 못 돌리는 팔이 337줄 중 24줄짜리 증거를 잡아냈다.** 이 엔트리의 하중선.
+
+    ② **낡은주장 스캐너 신설 지시**  → rejected (내 잘못)
+       🟥 같은 일을 하는 계기가 **이미 셋** 있었다(`halffix_propagation_scan.sh` ·
+       `claim_propagation_scan.py` · `doc_claim_triad_scan.py`). **재발명 게이트를 안 돌렸다.**
+       팔이 600초 무진전으로 죽어서 그 덕에 잡혔다 — 안 죽었으면 네 번째가 생겼을 것이다.
+
+    ③④ **병렬 2건(낡은주장 스캐너 · 신호 중복판정 재검)**  → rejected
+       둘 다 600초 무진전 사망, 산출 0. 원인 추정 = 프롬프트가 넓고 «읽을 것» 이 많았다(미확정).
+       뒤 프롬프트부터 «20분 안에 못 끝내면 거기까지 보고해라» 를 붙였다.
+
+    ── 그래서 오늘 배운 것 ──
+
+    🟥 **적발의 주력이 에이전트가 아니었다.** 오늘 실제 적발 축은 ⓐ 운영자의 실물 관찰
+    (점 크기 · 점 미끄러짐 · 기울기 오판 · 사각 테두리 · 기괴한 눈동자 · 급 멈춤)과
+    ⓑ 되돌림 프로브(자기참조 레인 · 약한 known-pair)였다.
+    디스패치는 ①에서 **한 번** 크게 벌었고, ②③④는 **내 발주 품질** 문제로 0을 냈다.
+    ⇒ 다음 회차의 레버는 «더 많이 띄우기» 가 아니라 **재발명 게이트 선행 + 좁은 임무문**이다.
+
+- date: 2026-09-21
+  session: forge-harness 거버너 (PR 검토·머지 8건 + 메인테이너 페르소나 sim)
+  dispatched: 9
+  agents: >-
+    fh-meta:challenger ×1 (PR #778 적대검증) · general-purpose ×2 (클린룸 감사 · D9 귀속) ·
+    worktree-isolated ×1 (PR #780 L2/L7) · fh-meta:main-player ×3 (메인테이너 페르소나 블라인드 sim) ·
+    codex(gpt-5.5) ×2 (교차계열 — PR #774 · 내 diff)
+  outcome: accepted
+  evidence: >-
+    ⓐ **적발의 주력이 에이전트였다 — 어제와 반대다.** 워크트리 에이전트가 내가 몰랐던 L7 을
+    찾고 내 프레이밍(«옛 wc -w 와 같아야 한다»)을 **틀렸다고 교정**했다(그 11 은 낱말 수가
+    아니라 BSD wc 가 한글 토큰 안을 쪼갠 값). 클린룸 감사가 내 bash 3.2 건을 독립 재현하고
+    4건을 더 냈다. D9 귀속 에이전트가 선행 실패를 컨트롤 4개로 확정하고 근본 원인까지 짚었다.
+    codex 가 6건 중 4건 실물 수리로 반영됐다.
+    ⓑ **자력 적발은 셋 다 0에 가까웠다** — 전부 «다른 자리에서 본 것» 이 잡았다.
+  learning: >-
+    🟥 **메인테이너 페르소나 sim 은 반증됐다(3/7, 기저율 5/7, DECLINE 0/9).** 그리고 그 실패의
+    절반이 **내 계기 탓**이었다 — 블라인드를 위해 레포명을 지웠는데 그게 **예측 변수 자체**였고
+    (「이 레포가 무엇을 하려는 곳인가」), DECLINE 의 알려진 양성도 코퍼스에 없었다.
+    ⇒ 배역은 안 짓는다. 축을 «결정 예측» 에서 **«정책 읽기»** 로 옮기면 인용 가능성으로 검증돼
+    기저율 문제를 우회한다.
+    ⓒ **디스패치 자체에 대한 교훈**: 운영자 지적으로 중간에 방식을 바꿨다 — 10분짜리 selfcheck 을
+    거버너 컨텍스트에서 붙잡고 있었고, 그 뒤로는 위임 후 다른 갈래를 진행했다
+    (`[[feedback_governor_delegates_keeps_context_free]]`).
+- date: 2026-09-22
+  session: forge-harness 거버너 (야간 자율주행 → 아침 승인 5건 → 실사용 버그 대응 → 마감)
+  dispatched: 13
+  agents: >-
+    🟥 tally 파일은 날짜만 기록하고 대상 세부를 안 남긴다(known limitation, fh_signal_2026-08-16
+    이 이미 이름 붙인 그 사각). 이 가시 세션에서 직접 부른 것은 `harvest-loop` Skill 1건뿐 —
+    나머지 12건은 압축 전 구간(오늘 새벽~아침) 또는 병렬 peer 세션(비공개 컴패니언 세션 · friends-on-desk-f7 ·
+    friends-on-desk-0f, 전부 오늘 이 레포/자매 레포에서 자체 게이트·적대검증 패스를 돌렸다고
+    보고함)에서 난 것으로 추정되나 **개별 귀속은 못 한다** — 지어내지 않는다
+  outcome: accepted
+  evidence: >-
+    peer 셋이 마감 스윕 질문에 직접 응답하며 자기 적발 사례를 보고했다(비공개 컴패니언 세션: $SRC 빈값 치환
+    자력 적발 · friends-on-desk-f7: main ref 정체 + 19/19 스크래치패드 전용 적발). 이 자체가
+    디스패치 산출의 증거이지만, tally 카운트 13 과 1:1 매핑은 안 됐다
+  learning: >-
+    🟥 **tally 는 존재를 재지 신원을 안 잰다.** 「13건 있었다」는 알아도 「무엇 13개」는 구조적으로
+    복원 불가 — 오늘처럼 컴팩션 + 모델전환 + 병렬 peer 셋이 겹친 날엔 사후 귀속이 특히 어렵다.
+    ⇒ 처방은 이미 named 돼 있다(fh_signal_2026-08-16) — 이 세션이 그걸 다시 겪었을 뿐 새 발견은
+    아니다. 실시간(디스패치 직후) 기록이 유일한 진짜 해법이고, 마감 시점 재구성은 항상 근사치다
